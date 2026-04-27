@@ -6,8 +6,19 @@
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
-    model-viewer { width: 100vw; height: 70vh; }
+    body { 
+      background: #111; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      height: 100vh; 
+      font-family: sans-serif; 
+    }
+    model-viewer { 
+      width: 100vw; 
+      height: 70vh; 
+    }
     .ar-button {
       margin-top: 10px;
       padding: 15px 40px;
@@ -26,24 +37,45 @@
   <model-viewer
     id="viewer"
     src="burger.glb"
+    ios-src="burger.usdz"
     ar
     ar-modes="scene-viewer webxr quick-look"
     camera-controls
+    touch-action="rotate"
+    interaction-prompt="auto"
     auto-rotate
     shadow-intensity="1"
     alt="Burger">
+
+    <!-- This button shows on Android -->
+    <button 
+      slot="ar-button" 
+      class="ar-button">
+      View On Your Table
+    </button>
+
   </model-viewer>
 
-  <button class="ar-button" onclick="launchAR()">
-    View On Your Table
-  </button>
-
 <script>
-function launchAR() {
-  const modelUrl = encodeURIComponent(window.location.origin + '/burger.glb');
-  const intentUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${modelUrl}&mode=ar_only#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=https://developers.google.com/ar;end;`;
-  window.location = intentUrl;
-}
+  const viewer = document.getElementById('viewer');
+  
+  // Detect iOS and trigger Quick Look directly
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  
+  if (isIOS) {
+    const anchor = document.createElement('a');
+    anchor.setAttribute('rel', 'ar');
+    anchor.setAttribute('href', 'burger.usdz');
+    
+    const button = document.createElement('button');
+    button.className = 'ar-button';
+    button.textContent = 'View On Your Table';
+    button.style.position = 'absolute';
+    button.style.bottom = '20px';
+    
+    anchor.appendChild(button);
+    document.body.appendChild(anchor);
+  }
 </script>
 
 </body>
