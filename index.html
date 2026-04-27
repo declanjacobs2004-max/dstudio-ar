@@ -17,10 +17,10 @@
     }
     model-viewer { 
       width: 100vw; 
-      height: 70vh; 
+      height: 75vh; 
     }
-    .ar-button {
-      margin-top: 10px;
+    #ar-button {
+      margin-top: 15px;
       padding: 15px 40px;
       background: #ff6b00;
       color: white;
@@ -29,6 +29,8 @@
       font-size: 18px;
       font-weight: bold;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
     }
   </style>
 </head>
@@ -47,36 +49,15 @@
     shadow-intensity="1"
     alt="Burger">
 
-    <!-- This button shows on Android -->
-    <button 
-      slot="ar-button" 
-      class="ar-button">
+    <a 
+      id="ar-button"
+      slot="ar-button"
+      href="burger.usdz"
+      rel="ar">
       View On Your Table
-    </button>
+    </a>
 
   </model-viewer>
-
-<script>
-  const viewer = document.getElementById('viewer');
-  
-  // Detect iOS and trigger Quick Look directly
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  
-  if (isIOS) {
-    const anchor = document.createElement('a');
-    anchor.setAttribute('rel', 'ar');
-    anchor.setAttribute('href', 'burger.usdz');
-    
-    const button = document.createElement('button');
-    button.className = 'ar-button';
-    button.textContent = 'View On Your Table';
-    button.style.position = 'absolute';
-    button.style.bottom = '20px';
-    
-    anchor.appendChild(button);
-    document.body.appendChild(anchor);
-  }
-</script>
 
 </body>
 </html>
