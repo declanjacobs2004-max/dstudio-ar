@@ -7,7 +7,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; }
-    model-viewer { width: 100vw; height: 100vh; }
+    model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
   </style>
 </head>
 <body>
@@ -15,11 +15,13 @@
   <model-viewer
     src="burger.glb"
     ar
-    ar-modes="webxr scene-viewer quick-look"
+    ar-modes="scene-viewer webxr quick-look"
+    ar-scale="fixed"
     camera-controls
     auto-rotate
     shadow-intensity="1"
-    alt="Burger">
+    alt="Burger"
+    ar-button>
   </model-viewer>
 
 </body>
