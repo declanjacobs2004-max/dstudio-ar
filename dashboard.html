@@ -1,700 +1,701 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D'Studio AR — Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --accent: #c8a96e;
-      --accent-dim: rgba(200, 169, 110, 0.1);
-      --accent-border: rgba(200, 169, 110, 0.25);
-      --bg: #080808;
-      --surface: #101010;
-      --surface2: #161616;
-      --border: #1e1e1e;
-      --text: #efefef;
-      --muted: #555;
-      --muted2: #2a2a2a;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>D'Studio AR — Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --gold: #c8a96e;
+    --gold-dim: rgba(200,169,110,0.12);
+    --gold-mid: rgba(200,169,110,0.25);
+    --bg: #080808;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: rgba(200,169,110,0.15);
+    --text: #e8e4dc;
+    --muted: rgba(232,228,220,0.45);
+    --error: #c0392b;
+    --success: #27ae60;
+    --radius: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; min-height: 100vh; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* ── LOGIN ────────────────────────────────────── */
+  #login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.07) 0%, transparent 60%);
+  }
+  .login-box {
+    width: 100%; max-width: 380px; padding: 48px 40px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    text-align: center;
+  }
+  .login-box img { width: 120px; margin-bottom: 32px; }
+  .login-box h1 {
+    font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300;
+    color: var(--gold); letter-spacing: 0.03em; margin-bottom: 6px;
+  }
+  .login-box p { color: var(--muted); margin-bottom: 32px; font-size: 13px; }
+  .login-box input {
+    width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; margin-bottom: 12px; transition: border-color 0.2s;
+  }
+  .login-box input:focus { outline: none; border-color: var(--gold); }
+  .login-error { color: var(--error); font-size: 12px; margin-bottom: 12px; display: none; }
+  .btn-primary {
+    width: 100%; padding: 13px; background: var(--gold); border: none; border-radius: var(--radius);
+    color: #080808; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 14px;
+    cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    body {
-      background: var(--bg);
-      font-family: 'DM Sans', sans-serif;
-      color: var(--text);
-      min-height: 100vh;
-    }
+  /* ── DASHBOARD SHELL ──────────────────────────── */
+  #dashboard { display: none; }
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar img { height: 28px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .topbar-label { color: var(--muted); font-size: 12px; }
+  .btn-logout {
+    padding: 7px 16px; background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-logout:hover { border-color: var(--gold); color: var(--gold); }
 
-    /* ── LOGIN ── */
-    #loginSection {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 40px 20px;
-      background: radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.06) 0%, transparent 70%);
-    }
+  .main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
 
-    .login-logo {
-      width: 64px;
-      filter: invert(1);
-      opacity: 0.85;
-      margin-bottom: 20px;
-    }
+  /* ── STATS ROW ────────────────────────────────── */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .stat-value {
+    font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 300;
+    color: var(--gold); line-height: 1;
+  }
+  .stat-label { color: var(--muted); font-size: 12px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
 
-    .login-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 30px;
-      font-weight: 300;
-      letter-spacing: 8px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      color: var(--text);
-    }
+  /* ── SECTION HEADING ──────────────────────────── */
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .section-head h2 {
+    font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--gold);
+  }
+  .btn-sm {
+    padding: 8px 16px; background: var(--gold); border: none; border-radius: 6px;
+    color: #080808; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 12px;
+    cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.2s; white-space: nowrap;
+  }
+  .btn-sm:hover { opacity: 0.85; }
+  .btn-sm-outline {
+    padding: 7px 14px; background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 12px; cursor: pointer; transition: border-color 0.2s, color 0.2s; white-space: nowrap;
+  }
+  .btn-sm-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-danger {
+    padding: 7px 14px; background: transparent; border: 1px solid rgba(192,57,43,0.4);
+    border-radius: 6px; color: rgba(192,57,43,0.8); font-family: 'DM Sans', sans-serif;
+    font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .btn-danger:hover { border-color: var(--error); color: var(--error); }
 
-    .login-sub {
-      font-size: 10px;
-      letter-spacing: 4px;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 52px;
-    }
+  /* ── CARDS ────────────────────────────────────── */
+  .restaurant-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 12px; overflow: hidden;
+  }
+  .restaurant-card-head {
+    padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .restaurant-card-head:hover { background: var(--surface2); }
+  .restaurant-card-name {
+    font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .badge-active {
+    display: inline-block; padding: 2px 8px; background: rgba(39,174,96,0.15);
+    border: 1px solid rgba(39,174,96,0.3); border-radius: 20px;
+    color: #27ae60; font-size: 10px; font-family: 'DM Sans', sans-serif;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .badge-inactive {
+    display: inline-block; padding: 2px 8px; background: rgba(232,228,220,0.05);
+    border: 1px solid rgba(232,228,220,0.1); border-radius: 20px;
+    color: var(--muted); font-size: 10px; font-family: 'DM Sans', sans-serif;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .chevron { color: var(--muted); transition: transform 0.2s; font-size: 12px; }
+  .chevron.open { transform: rotate(180deg); }
 
-    .login-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 36px;
-      width: 100%;
-      max-width: 400px;
-    }
+  .restaurant-card-body { display: none; border-top: 1px solid var(--border); padding: 20px; }
+  .restaurant-card-body.open { display: block; }
 
-    .login-box label {
-      display: block;
-      font-size: 10px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
+  .card-meta { display: flex; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
+  .card-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .card-meta-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .card-meta-value { font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; }
+  .card-meta-value a { color: var(--gold); text-decoration: none; }
+  .card-meta-value a:hover { text-decoration: underline; }
 
-    .login-box input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.2s;
-      margin-bottom: 20px;
-    }
+  /* ── DISHES TABLE ─────────────────────────────── */
+  .dishes-section { margin-top: 8px; }
+  .dishes-section-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .dishes-section-head span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .dish-row {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 16px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px; justify-content: space-between;
+  }
+  .dish-info { flex: 1; min-width: 0; }
+  .dish-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dish-price { font-size: 12px; color: var(--gold); margin-top: 2px; }
+  .dish-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
-    .login-box input:focus { border-color: var(--accent); }
+  /* ── MODAL ────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(8,8,8,0.85); z-index: 200;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+    padding: 32px; transform: translateY(12px); transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal h3 {
+    font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400;
+    color: var(--gold); margin-bottom: 24px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
+  .form-input {
+    width: 100%; padding: 11px 14px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; transition: border-color 0.2s;
+  }
+  .form-input:focus { outline: none; border-color: var(--gold); }
+  .form-input[type="checkbox"] { width: auto; }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .form-error { color: var(--error); font-size: 12px; margin-top: 8px; display: none; }
+  .form-check { display: flex; align-items: center; gap: 10px; }
+  .form-check input { accent-color: var(--gold); }
 
-    .error-msg {
-      color: #e05555;
-      font-size: 12px;
-      text-align: center;
-      margin-bottom: 12px;
-      display: none;
-      letter-spacing: 1px;
-    }
+  /* ── TOAST ────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 300;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 20px; font-size: 13px; max-width: 300px;
+    transform: translateY(20px); opacity: 0; transition: all 0.25s;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: rgba(39,174,96,0.4); color: #2ecc71; }
+  .toast.error { border-color: rgba(192,57,43,0.4); color: #e74c3c; }
 
-    /* ── BUTTONS ── */
-    .btn-primary {
-      width: 100%;
-      padding: 15px;
-      background: var(--accent);
-      color: #080808;
-      border: none;
-      border-radius: 50px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-    }
+  /* ── EMPTY STATE ──────────────────────────────── */
+  .empty-state {
+    text-align: center; padding: 48px 20px; color: var(--muted);
+  }
+  .empty-state p { margin-bottom: 16px; }
 
-    .btn-primary:hover { opacity: 0.88; }
-    .btn-primary:active { transform: scale(0.98); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* ── LOADING ──────────────────────────────────── */
+  .loading { text-align: center; padding: 48px; color: var(--muted); }
+  .spinner {
+    width: 28px; height: 28px; border: 2px solid var(--border);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 7px 16px;
-      border-radius: 50px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* ── DASHBOARD ── */
-    #dashboard { display: none; }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 36px;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      background: rgba(8,8,8,0.96);
-      backdrop-filter: blur(16px);
-      z-index: 100;
-    }
-
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .topbar-logo {
-      width: 34px;
-      filter: invert(1);
-      opacity: 0.8;
-    }
-
-    .topbar-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 18px;
-      font-weight: 400;
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      color: var(--text);
-    }
-
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .client-count {
-      font-size: 10px;
-      letter-spacing: 2px;
-      color: var(--muted);
-      text-transform: uppercase;
-    }
-
-    .client-count span { color: var(--accent); }
-
-    /* ── GRID ── */
-    .main {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      padding: 28px 36px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    @media (max-width: 800px) {
-      .main { grid-template-columns: 1fr; padding: 20px; }
-      .topbar { padding: 16px 20px; }
-      .stats-row { grid-template-columns: 1fr; }
-      .clients-panel { grid-column: 1; }
-    }
-
-    /* ── STATS ── */
-    .stats-row {
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 22px 26px;
-    }
-
-    .stat-label {
-      font-size: 10px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .stat-value {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 40px;
-      font-weight: 300;
-      color: var(--accent);
-      line-height: 1;
-    }
-
-    /* ── PANELS ── */
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px;
-    }
-
-    .panel-title {
-      font-size: 10px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .panel-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    /* ── FORM ── */
-    .form-group { margin-bottom: 16px; }
-
-    .form-group label {
-      display: block;
-      font-size: 10px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 7px;
-    }
-
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 15px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus { border-color: var(--accent); }
-
-    .form-group textarea {
-      height: 80px;
-      resize: none;
-    }
-
-    /* ── SUCCESS ── */
-    .success-box {
-      display: none;
-      background: var(--accent-dim);
-      border: 1px solid var(--accent-border);
-      border-radius: 12px;
-      padding: 18px;
-      margin-top: 16px;
-    }
-
-    .success-box p {
-      font-size: 10px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-
-    .success-link {
-      font-size: 12px;
-      color: var(--text);
-      word-break: break-all;
-      display: block;
-      margin-bottom: 12px;
-      opacity: 0.6;
-      line-height: 1.5;
-    }
-
-    /* ── CLIENTS ── */
-    .clients-panel { grid-column: 1 / -1; }
-
-    .client-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-      gap: 16px;
-    }
-
-    .client-item:last-child { border-bottom: none; }
-
-    .client-info { flex: 1; min-width: 0; }
-
-    .client-restaurant {
-      font-size: 15px;
-      font-weight: 500;
-      margin-bottom: 3px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .client-dish {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .client-price {
-      font-size: 13px;
-      color: var(--accent);
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    .client-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
-    .view-link {
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--accent);
-      text-decoration: none;
-      padding: 7px 16px;
-      border: 1px solid var(--accent-border);
-      border-radius: 50px;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-
-    .view-link:hover {
-      background: var(--accent);
-      color: #080808;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 48px 20px;
-      color: var(--muted);
-      font-size: 12px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
-    .loading-state {
-      text-align: center;
-      padding: 32px;
-      color: var(--muted);
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-    }
-
-    /* ── HOW IT WORKS ── */
-    .step {
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .step:last-child { border-bottom: none; }
-
-    .step-num {
-      font-size: 10px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 5px;
-    }
-
-    .step-title {
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-
-    .step-desc {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-  </style>
+  /* ── RESPONSIVE ───────────────────────────────── */
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .main { padding: 20px 16px; }
+    .topbar { padding: 0 16px; }
+    .form-row { grid-template-columns: 1fr; }
+    .card-actions { flex-direction: column; align-items: flex-start; }
+    .modal { padding: 24px 20px; }
+  }
+</style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginSection">
-  <img src="D_Studio_logo.png" class="login-logo" alt="D'Studio">
-  <h1 class="login-title">D'Studio</h1>
-  <p class="login-sub">AR Management Portal</p>
-
+<!-- ── LOGIN SCREEN ─────────────────────────────────────── -->
+<div id="login-screen">
   <div class="login-box">
-    <label>Admin Password</label>
-    <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="current-password">
-    <p class="error-msg" id="errorMsg">Incorrect password — please try again.</p>
-    <button class="btn-primary" onclick="login()">Access Dashboard</button>
+    <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none'; document.getElementById('login-logo-text').style.display='block'" />
+    <div id="login-logo-text" style="display:none; font-family:'Cormorant Garamond',serif; font-size:26px; color:var(--gold); margin-bottom:32px;">D'Studio AR</div>
+    <h1>Admin Dashboard</h1>
+    <p>D'Studio AR Platform</p>
+    <div class="login-error" id="login-error">Incorrect password. Try again.</div>
+    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password" />
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
   </div>
 </div>
 
-<!-- DASHBOARD -->
+<!-- ── DASHBOARD ─────────────────────────────────────────── -->
 <div id="dashboard">
-
   <div class="topbar">
-    <div class="topbar-left">
-      <img src="D_Studio_logo.png" class="topbar-logo" alt="D'Studio">
-      <span class="topbar-title">D'Studio AR</span>
-    </div>
+    <img src="D_Studio_logo.png" alt="D'Studio" height="28" onerror="this.outerHTML='<span style=\'font-family:Cormorant Garamond,serif;color:var(--gold);font-size:18px;\'>D\'Studio AR</span>'" />
     <div class="topbar-right">
-      <span class="client-count">Clients: <span id="clientCountBadge">0</span></span>
-      <button class="btn-secondary" onclick="logout()">Logout</button>
+      <span class="topbar-label">Admin</span>
+      <button class="btn-logout" onclick="doLogout()">Log Out</button>
     </div>
   </div>
 
   <div class="main">
-
     <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card">
-        <div class="stat-label">Total Clients</div>
-        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-value" id="stat-clients">—</div>
+        <div class="stat-label">Active Clients</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">AR Menus Active</div>
-        <div class="stat-value" id="statMenus">0</div>
+        <div class="stat-value" id="stat-dishes">—</div>
+        <div class="stat-label">Total AR Dishes</div>
       </div>
       <div class="stat-card">
+        <div class="stat-value" id="stat-revenue">—</div>
         <div class="stat-label">Est. Monthly Revenue</div>
-        <div class="stat-value" id="statRevenue">R0</div>
       </div>
     </div>
 
-    <!-- Add Restaurant -->
-    <div class="panel">
-      <div class="panel-title">Add New Restaurant</div>
-
-      <div class="form-group">
-        <label>Restaurant Name *</label>
-        <input type="text" id="restaurantName" placeholder="e.g. Hudson's Burger Co.">
-      </div>
-      <div class="form-group">
-        <label>Dish Name *</label>
-        <input type="text" id="dishName" placeholder="e.g. The Classic Smash">
-      </div>
-      <div class="form-group">
-        <label>Price *</label>
-        <input type="text" id="dishPrice" placeholder="e.g. R 165">
-      </div>
-      <div class="form-group">
-        <label>Description</label>
-        <textarea id="dishDescription" placeholder="Describe the dish..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>3D Model URL (GLB) *</label>
-        <input type="text" id="modelUrl" placeholder="https://yoursite.vercel.app/burger.glb">
-      </div>
-
-      <button class="btn-primary" id="addBtn" onclick="addRestaurant()">Generate AR Menu</button>
-
-      <div class="success-box" id="successBox">
-        <p>AR Menu Created — Share This Link</p>
-        <span class="success-link" id="menuLink"></span>
-        <button class="btn-secondary" onclick="copyLink()">Copy Link</button>
-      </div>
+    <!-- Restaurants -->
+    <div class="section-head">
+      <h2>Restaurants</h2>
+      <button class="btn-sm" onclick="openAddRestaurantModal()">+ Add Restaurant</button>
     </div>
-
-    <!-- How It Works -->
-    <div class="panel">
-      <div class="panel-title">How It Works</div>
-
-      <div class="step">
-        <div class="step-num">Step 01</div>
-        <div class="step-title">Fill in restaurant details</div>
-        <div class="step-desc">Enter the restaurant name, dish info and your hosted GLB model URL from Vercel.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">Step 02</div>
-        <div class="step-title">Generate the AR menu</div>
-        <div class="step-desc">Click Generate and a unique AR menu link is created instantly for that client.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">Step 03</div>
-        <div class="step-title">Create a QR code</div>
-        <div class="step-desc">Take the link to qr-code-generator.com and generate a QR code for the restaurant table.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">Step 04</div>
-        <div class="step-title">Client goes live</div>
-        <div class="step-desc">Customers scan the QR code and see their food in AR on the table. Done.</div>
-      </div>
+    <div id="restaurants-list">
+      <div class="loading"><div class="spinner"></div>Loading clients…</div>
     </div>
-
-    <!-- Client List -->
-    <div class="panel clients-panel">
-      <div class="panel-title">Your Clients</div>
-      <div id="clientList"><div class="loading-state">Loading clients...</div></div>
-    </div>
-
   </div>
 </div>
 
-<script>
-  const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
-  const ADMIN_PASSWORD = 'Decl@n123';
+<!-- ── MODAL: ADD RESTAURANT ────────────────────────────── -->
+<div class="modal-overlay" id="modal-add-restaurant">
+  <div class="modal">
+    <h3>Add Restaurant</h3>
+    <div class="form-group">
+      <label class="form-label">Restaurant Name</label>
+      <input class="form-input" type="text" id="new-rest-name" placeholder="e.g. Hudson's Burger Co" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Slug <span style="color:var(--muted);font-size:11px;">(URL identifier — lowercase, hyphens only)</span></label>
+      <input class="form-input" type="text" id="new-rest-slug" placeholder="e.g. hudsons-burger-co" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Client Analytics Password</label>
+      <input class="form-input" type="text" id="new-rest-password" placeholder="e.g. hudsons2024" />
+    </div>
+    <div class="form-group form-check">
+      <input type="checkbox" id="new-rest-active" />
+      <label for="new-rest-active" style="font-size:13px; color:var(--text);">Active paying client</label>
+    </div>
+    <div class="form-error" id="add-rest-error"></div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="submitAddRestaurant()">Create Restaurant</button>
+      <button class="btn-sm-outline" onclick="closeModal('modal-add-restaurant')">Cancel</button>
+    </div>
+  </div>
+</div>
 
-  const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  function login() {
-    const password = document.getElementById('passwordInput').value;
-    if (password === ADMIN_PASSWORD) {
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      loadClients();
-    } else {
-      document.getElementById('errorMsg').style.display = 'block';
-      document.getElementById('passwordInput').value = '';
-    }
-  }
-
-  function logout() {
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('loginSection').style.display = 'flex';
-    document.getElementById('passwordInput').value = '';
-    document.getElementById('errorMsg').style.display = 'none';
-  }
-
-  function generateSlug(restaurantName, dishName) {
-    const combined = restaurantName + '-' + dishName + '-' + Date.now();
-    return combined.toLowerCase()
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-  }
-
-  async function addRestaurant() {
-    const restaurantName = document.getElementById('restaurantName').value.trim();
-    const dishName = document.getElementById('dishName').value.trim();
-    const dishPrice = document.getElementById('dishPrice').value.trim();
-    const dishDescription = document.getElementById('dishDescription').value.trim();
-    const modelUrl = document.getElementById('modelUrl').value.trim();
-
-    if (!restaurantName || !dishName || !dishPrice || !modelUrl) {
-      alert('Please fill in all required fields marked with *');
-      return;
-    }
-
-    const btn = document.getElementById('addBtn');
-    btn.textContent = 'Generating...';
-    btn.disabled = true;
-
-    const slug = generateSlug(restaurantName, dishName);
-
-    const { error } = await db
-      .from('restaurants')
-      .insert([{
-        restaurant_name: restaurantName,
-        dish_name: dishName,
-        dish_price: dishPrice,
-        dish_description: dishDescription,
-        model_url: modelUrl,
-        slug: slug
-      }]);
-
-    btn.textContent = 'Generate AR Menu';
-    btn.disabled = false;
-
-    if (error) {
-      alert('Error saving client: ' + error.message);
-      return;
-    }
-
-    const menuUrl = window.location.origin + '/menu.html?slug=' + slug;
-    document.getElementById('menuLink').textContent = menuUrl;
-    document.getElementById('successBox').style.display = 'block';
-
-    document.getElementById('restaurantName').value = '';
-    document.getElementById('dishName').value = '';
-    document.getElementById('dishPrice').value = '';
-    document.getElementById('dishDescription').value = '';
-    document.getElementById('modelUrl').value = '';
-
-    loadClients();
-  }
-
-  async function loadClients() {
-    const { data, error } = await db
-      .from('restaurants')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      document.getElementById('clientList').innerHTML = '<div class="empty-state">Error loading clients.</div>';
-      return;
-    }
-
-    const total = data.length;
-    document.getElementById('statTotal').textContent = total;
-    document.getElementById('statMenus').textContent = total;
-    document.getElementById('statRevenue').textContent = 'R' + (total * 800).toLocaleString();
-    document.getElementById('clientCountBadge').textContent = total;
-
-    if (total === 0) {
-      document.getElementById('clientList').innerHTML = '<div class="empty-state">No clients yet — add your first restaurant above.</div>';
-      return;
-    }
-
-    document.getElementById('clientList').innerHTML = data.map(client => `
-      <div class="client-item">
-        <div class="client-info">
-          <div class="client-restaurant">${client.restaurant_name}</div>
-          <div class="client-dish">${client.dish_name}</div>
-        </div>
-        <div class="client-price">${client.dish_price}</div>
-        <div class="client-actions">
-          <a class="view-link" href="/menu.html?slug=${client.slug}" target="_blank">View AR →</a>
-          <button class="btn-secondary" onclick="copyClientLink('${client.slug}')">Copy</button>
-        </div>
+<!-- ── MODAL: ADD DISH ───────────────────────────────────── -->
+<div class="modal-overlay" id="modal-add-dish">
+  <div class="modal">
+    <h3>Add Dish</h3>
+    <input type="hidden" id="add-dish-restaurant-id" />
+    <div class="form-group">
+      <label class="form-label">Dish Name</label>
+      <input class="form-input" type="text" id="new-dish-name" placeholder="e.g. Classic Smash Burger" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Price</label>
+        <input class="form-input" type="text" id="new-dish-price" placeholder="e.g. R 189" />
       </div>
-    `).join('');
+      <div class="form-group">
+        <label class="form-label">Slug</label>
+        <input class="form-input" type="text" id="new-dish-slug" placeholder="e.g. classic-smash-burger" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input form-textarea" id="new-dish-desc" placeholder="Short description of the dish…"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">3D Model URL (GLB — Android)</label>
+      <input class="form-input" type="text" id="new-dish-model" placeholder="https://…/model.glb" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">USDZ URL (iPhone AR)</label>
+      <input class="form-input" type="text" id="new-dish-usdz" placeholder="https://…/model.usdz" />
+    </div>
+    <div class="form-error" id="add-dish-error"></div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="submitAddDish()">Add Dish</button>
+      <button class="btn-sm-outline" onclick="closeModal('modal-add-dish')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: EDIT RESTAURANT ────────────────────────────── -->
+<div class="modal-overlay" id="modal-edit-restaurant">
+  <div class="modal">
+    <h3>Edit Restaurant</h3>
+    <input type="hidden" id="edit-rest-id" />
+    <div class="form-group">
+      <label class="form-label">Restaurant Name</label>
+      <input class="form-input" type="text" id="edit-rest-name" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Slug</label>
+      <input class="form-input" type="text" id="edit-rest-slug" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Client Analytics Password</label>
+      <input class="form-input" type="text" id="edit-rest-password" />
+    </div>
+    <div class="form-group form-check">
+      <input type="checkbox" id="edit-rest-active" />
+      <label for="edit-rest-active" style="font-size:13px; color:var(--text);">Active paying client</label>
+    </div>
+    <div class="form-error" id="edit-rest-error"></div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="submitEditRestaurant()">Save Changes</button>
+      <button class="btn-sm-outline" onclick="closeModal('modal-edit-restaurant')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ─────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
+const ADMIN_PASSWORD = 'Decl@n123';
+const BASE_URL = 'https://dstudio-ar.vercel.app';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── LOGIN ────────────────────────────────────────────────
+document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function doLogin() {
+  const pw = document.getElementById('login-pw').value.trim();
+  const err = document.getElementById('login-error');
+  if (pw === ADMIN_PASSWORD) {
+    sessionStorage.setItem('dstudio_admin', '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadDashboard();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('login-pw').value = '';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('dstudio_admin');
+  location.reload();
+}
+
+// Auto-login if session exists
+if (sessionStorage.getItem('dstudio_admin') === '1') {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadDashboard();
+}
+
+// ── LOAD DASHBOARD ───────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [{ data: restaurants, error: rErr }, { data: dishes, error: dErr }] = await Promise.all([
+      db.from('restaurants').select('*').order('created_at', { ascending: false }),
+      db.from('dishes').select('*')
+    ]);
+    if (rErr) throw rErr;
+    if (dErr) throw dErr;
+
+    const active = restaurants.filter(r => r.is_active);
+    document.getElementById('stat-clients').textContent = active.length;
+    document.getElementById('stat-dishes').textContent = dishes.length;
+    const revenue = active.length * 650;
+    document.getElementById('stat-revenue').textContent = `R ${revenue.toLocaleString()}`;
+
+    renderRestaurants(restaurants, dishes);
+  } catch (e) {
+    document.getElementById('restaurants-list').innerHTML = `<div class="empty-state"><p style="color:var(--error)">Failed to load data: ${e.message}</p></div>`;
+  }
+}
+
+function renderRestaurants(restaurants, dishes) {
+  const container = document.getElementById('restaurants-list');
+  if (!restaurants.length) {
+    container.innerHTML = '<div class="empty-state"><p>No restaurants yet.</p><button class="btn-sm" onclick="openAddRestaurantModal()">Add your first restaurant</button></div>';
+    return;
   }
 
-  function copyLink() {
-    const link = document.getElementById('menuLink').textContent;
-    navigator.clipboard.writeText(link).then(() => alert('Link copied!'));
-  }
+  container.innerHTML = restaurants.map(r => {
+    const rDishes = dishes.filter(d => d.restaurant_id === r.id);
+    const menuLink = `${BASE_URL}/menu.html?restaurant=${r.slug}`;
+    const analyticsLink = `${BASE_URL}/analytics.html?restaurant=${r.slug}`;
+    const badge = r.is_active
+      ? '<span class="badge-active">Active</span>'
+      : '<span class="badge-inactive">Demo</span>';
 
-  function copyClientLink(slug) {
-    const link = window.location.origin + '/menu.html?slug=' + slug;
-    navigator.clipboard.writeText(link).then(() => alert('Link copied!'));
-  }
+    const dishRows = rDishes.length ? rDishes.map(d => {
+      const arLink = `${BASE_URL}/dish.html?restaurant=${r.slug}&dish=${d.slug}`;
+      return `
+        <div class="dish-row">
+          <div class="dish-info">
+            <div class="dish-name">${escHtml(d.dish_name)}</div>
+            <div class="dish-price">${escHtml(d.dish_price)}</div>
+          </div>
+          <div class="dish-actions">
+            <button class="btn-sm-outline" onclick="copyToClipboard('${arLink}', 'AR link copied')">Copy AR Link</button>
+            <button class="btn-danger" onclick="deleteDish('${d.id}', '${r.id}')">Delete</button>
+          </div>
+        </div>`;
+    }).join('') : `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No dishes yet. Add your first dish.</div>`;
 
-  document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') login();
+    return `
+      <div class="restaurant-card" id="card-${r.id}">
+        <div class="restaurant-card-head" onclick="toggleCard('${r.id}')">
+          <div class="restaurant-card-name">${escHtml(r.name)} ${badge}</div>
+          <div class="card-actions" onclick="event.stopPropagation()">
+            <button class="btn-sm-outline" onclick="copyToClipboard('${menuLink}', 'Menu link copied')">Menu Link</button>
+            <button class="btn-sm-outline" onclick="openEditRestaurantModal('${r.id}', '${escAttr(r.name)}', '${escAttr(r.slug)}', '${escAttr(r.client_password || '')}', ${r.is_active})">Edit</button>
+            <button class="btn-danger" onclick="deleteRestaurant('${r.id}')">Delete</button>
+            <span class="chevron" id="chevron-${r.id}">▼</span>
+          </div>
+        </div>
+        <div class="restaurant-card-body" id="body-${r.id}">
+          <div class="card-meta">
+            <div class="card-meta-item">
+              <span class="card-meta-label">Menu URL</span>
+              <span class="card-meta-value"><a href="${menuLink}" target="_blank">/menu.html?restaurant=${escHtml(r.slug)}</a></span>
+            </div>
+            <div class="card-meta-item">
+              <span class="card-meta-label">Analytics</span>
+              <span class="card-meta-value"><a href="${analyticsLink}" target="_blank">View Dashboard</a></span>
+            </div>
+            <div class="card-meta-item">
+              <span class="card-meta-label">Client Password</span>
+              <span class="card-meta-value" style="font-family:monospace">${escHtml(r.client_password || '—')}</span>
+            </div>
+          </div>
+          <div class="dishes-section">
+            <div class="dishes-section-head">
+              <span>Dishes (${rDishes.length})</span>
+              <button class="btn-sm" onclick="openAddDishModal('${r.id}')">+ Add Dish</button>
+            </div>
+            <div id="dishes-${r.id}">${dishRows}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleCard(id) {
+  const body = document.getElementById(`body-${id}`);
+  const chevron = document.getElementById(`chevron-${id}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+}
+
+// ── ADD RESTAURANT ───────────────────────────────────────
+function openAddRestaurantModal() {
+  ['new-rest-name','new-rest-slug','new-rest-password'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('new-rest-active').checked = false;
+  hideError('add-rest-error');
+  openModal('modal-add-restaurant');
+}
+
+document.getElementById('new-rest-name').addEventListener('input', function() {
+  document.getElementById('new-rest-slug').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+});
+
+async function submitAddRestaurant() {
+  const name = document.getElementById('new-rest-name').value.trim();
+  const slug = document.getElementById('new-rest-slug').value.trim();
+  const password = document.getElementById('new-rest-password').value.trim();
+  const is_active = document.getElementById('new-rest-active').checked;
+
+  if (!name || !slug || !password) return showError('add-rest-error', 'Please fill in all fields.');
+  if (!/^[a-z0-9-]+$/.test(slug)) return showError('add-rest-error', 'Slug must be lowercase letters, numbers and hyphens only.');
+
+  const btn = event.target; btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const { error } = await db.from('restaurants').insert({ name, slug, is_active, client_password: password });
+    if (error) throw error;
+    closeModal('modal-add-restaurant');
+    showToast('Restaurant created', 'success');
+    loadDashboard();
+  } catch (e) {
+    showError('add-rest-error', e.message.includes('unique') ? 'That slug is already taken.' : e.message);
+  } finally { btn.disabled = false; btn.textContent = 'Create Restaurant'; }
+}
+
+// ── EDIT RESTAURANT ───────────────────────────────────────
+function openEditRestaurantModal(id, name, slug, password, isActive) {
+  document.getElementById('edit-rest-id').value = id;
+  document.getElementById('edit-rest-name').value = name;
+  document.getElementById('edit-rest-slug').value = slug;
+  document.getElementById('edit-rest-password').value = password;
+  document.getElementById('edit-rest-active').checked = isActive;
+  hideError('edit-rest-error');
+  openModal('modal-edit-restaurant');
+}
+
+async function submitEditRestaurant() {
+  const id = document.getElementById('edit-rest-id').value;
+  const name = document.getElementById('edit-rest-name').value.trim();
+  const slug = document.getElementById('edit-rest-slug').value.trim();
+  const client_password = document.getElementById('edit-rest-password').value.trim();
+  const is_active = document.getElementById('edit-rest-active').checked;
+
+  if (!name || !slug || !client_password) return showError('edit-rest-error', 'Please fill in all fields.');
+
+  const btn = event.target; btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const { error } = await db.from('restaurants').update({ name, slug, is_active, client_password }).eq('id', id);
+    if (error) throw error;
+    closeModal('modal-edit-restaurant');
+    showToast('Restaurant updated', 'success');
+    loadDashboard();
+  } catch (e) {
+    showError('edit-rest-error', e.message);
+  } finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
+}
+
+async function deleteRestaurant(id) {
+  if (!confirm('Delete this restaurant and all its dishes? This cannot be undone.')) return;
+  try {
+    const { error } = await db.from('restaurants').delete().eq('id', id);
+    if (error) throw error;
+    showToast('Restaurant deleted', 'success');
+    loadDashboard();
+  } catch (e) { showToast('Delete failed: ' + e.message, 'error'); }
+}
+
+// ── ADD DISH ─────────────────────────────────────────────
+function openAddDishModal(restaurantId) {
+  document.getElementById('add-dish-restaurant-id').value = restaurantId;
+  ['new-dish-name','new-dish-price','new-dish-slug','new-dish-desc','new-dish-model','new-dish-usdz'].forEach(id => document.getElementById(id).value = '');
+  hideError('add-dish-error');
+  openModal('modal-add-dish');
+}
+
+document.getElementById('new-dish-name').addEventListener('input', function() {
+  document.getElementById('new-dish-slug').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+});
+
+async function submitAddDish() {
+  const restaurant_id = document.getElementById('add-dish-restaurant-id').value;
+  const dish_name = document.getElementById('new-dish-name').value.trim();
+  const dish_price = document.getElementById('new-dish-price').value.trim();
+  const slug = document.getElementById('new-dish-slug').value.trim();
+  const dish_description = document.getElementById('new-dish-desc').value.trim();
+  const model_url = document.getElementById('new-dish-model').value.trim();
+  const usdz_url = document.getElementById('new-dish-usdz').value.trim();
+
+  if (!dish_name || !dish_price || !slug) return showError('add-dish-error', 'Name, price and slug are required.');
+
+  const btn = event.target; btn.disabled = true; btn.textContent = 'Adding…';
+  try {
+    const { error } = await db.from('dishes').insert({ restaurant_id, dish_name, dish_price, slug, dish_description, model_url, usdz_url });
+    if (error) throw error;
+    closeModal('modal-add-dish');
+    showToast('Dish added', 'success');
+    loadDashboard();
+  } catch (e) {
+    showError('add-dish-error', e.message.includes('unique') ? 'A dish with that slug already exists for this restaurant.' : e.message);
+  } finally { btn.disabled = false; btn.textContent = 'Add Dish'; }
+}
+
+async function deleteDish(dishId, restaurantId) {
+  if (!confirm('Delete this dish?')) return;
+  try {
+    const { error } = await db.from('dishes').delete().eq('id', dishId);
+    if (error) throw error;
+    showToast('Dish deleted', 'success');
+    loadDashboard();
+  } catch (e) { showToast('Delete failed: ' + e.message, 'error'); }
+}
+
+// ── UTILITIES ────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+function hideError(id) {
+  const el = document.getElementById(id);
+  el.textContent = ''; el.style.display = 'none';
+}
+
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function copyToClipboard(text, label = 'Copied') {
+  navigator.clipboard.writeText(text).then(() => showToast(label, 'success')).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = text; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    showToast(label, 'success');
   });
-</script>
+}
 
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(str) {
+  return String(str).replace(/'/g, "\\'");
+}
+</script>
 </body>
 </html>
