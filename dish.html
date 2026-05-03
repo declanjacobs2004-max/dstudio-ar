@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AR Dish — D'Studio AR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+<style>
+  :root {
+    --gold: #c8a96e;
+    --gold-dim: rgba(200,169,110,0.10);
+    --bg: #080808;
+    --surface: #111111;
+    --border: rgba(200,169,110,0.14);
+    --text: #e8e4dc;
+    --muted: rgba(232,228,220,0.45);
+    --radius: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+
+  /* ── LOADING ────────────────────────────── */
+  #loading-screen {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    z-index: 100;
+  }
+  .spinner {
+    width: 36px; height: 36px; border: 2px solid rgba(200,169,110,0.15);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--muted); font-size: 13px; }
+
+  /* ── ERROR ──────────────────────────────── */
+  #error-screen {
+    display: none; min-height: 100vh;
+    flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    text-align: center; padding: 40px 24px;
+  }
+  #error-screen h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); }
+  #error-screen p { color: var(--muted); font-size: 14px; }
+
+  /* ── MAIN ───────────────────────────────── */
+  #main { display: none; max-width: 520px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+
+  /* ── BACK NAV ───────────────────────────── */
+  .back-nav {
+    padding: 16px 20px 8px;
+  }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--muted); font-size: 13px; text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--gold); }
+  .back-link svg { opacity: 0.6; }
+
+  /* ── MODEL VIEWER ───────────────────────── */
+  .model-container {
+    width: 100%; aspect-ratio: 1 / 1;
+    background: radial-gradient(circle at 50% 60%, rgba(200,169,110,0.06) 0%, transparent 65%);
+    position: relative; overflow: hidden;
+  }
+  model-viewer {
+    width: 100%; height: 100%;
+    --poster-color: transparent;
+    background: transparent;
+  }
+  .model-no-src {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+  }
+  .model-no-src svg { opacity: 0.15; }
+  .model-no-src span { color: var(--muted); font-size: 13px; }
+
+  /* ── DISH INFO ──────────────────────────── */
+  .dish-info { padding: 24px 24px 0; }
+  .dish-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px; font-weight: 300; line-height: 1.15;
+    color: var(--text); margin-bottom: 8px;
+  }
+  .dish-price { font-size: 20px; color: var(--gold); font-weight: 500; margin-bottom: 14px; }
+  .dish-description {
+    font-size: 14px; color: var(--muted); line-height: 1.65;
+    border-top: 1px solid var(--border); padding-top: 14px;
+  }
+
+  /* ── AR BUTTON SECTION ──────────────────── */
+  .ar-section { padding: 24px 24px 0; }
+  .ar-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 16px;
+    background: var(--gold); border: none; border-radius: var(--radius);
+    color: #080808; font-family: 'DM Sans', sans-serif; font-weight: 600;
+    font-size: 15px; letter-spacing: 0.03em; cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    text-decoration: none;
+  }
+  .ar-btn:hover { opacity: 0.88; }
+  .ar-btn:active { transform: scale(0.98); }
+  .ar-btn svg { flex-shrink: 0; }
+
+  .ar-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+  /* ── FOOTER BRAND ───────────────────────── */
+  .footer-brand {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--bg); border-top: 1px solid var(--border);
+    padding: 14px 24px; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .footer-brand img { height: 18px; opacity: 0.6; }
+  .footer-brand span { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  @media (min-width: 521px) {
+    #main { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading dish…</div>
+</div>
+
+<div id="error-screen">
+  <h2>Dish not found</h2>
+  <p>This dish could not be loaded. Please scan the QR code again.</p>
+</div>
+
+<div id="main">
+  <div class="back-nav">
+    <a class="back-link" id="back-link" href="#">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back to menu
+    </a>
+  </div>
+
+  <div class="model-container" id="model-container">
+    <!-- Populated by JS -->
+  </div>
+
+  <div class="dish-info">
+    <div class="dish-name" id="dish-name"></div>
+    <div class="dish-price" id="dish-price"></div>
+    <div class="dish-description" id="dish-description"></div>
+  </div>
+
+  <div class="ar-section" id="ar-section"></div>
+
+  <div class="footer-brand">
+    <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none'" />
+    <span>Powered by D'Studio AR</span>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function detectDevice() {
+  const ua = navigator.userAgent;
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+  if (/android/i.test(ua)) return 'android';
+  return 'unknown';
+}
+
+async function logView(dishId, restaurantId) {
+  try {
+    await db.from('dish_views').insert({
+      dish_id: dishId,
+      restaurant_id: restaurantId,
+      device_type: detectDevice(),
+      viewed_at: new Date().toISOString()
+    });
+  } catch (_) {
+    // Silent — never interrupt the user experience
+  }
+}
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const restaurantSlug = params.get('restaurant');
+  const dishSlug = params.get('dish');
+
+  if (!restaurantSlug || !dishSlug) return showError();
+
+  try {
+    const { data: restaurant, error: rErr } = await db
+      .from('restaurants')
+      .select('id, name, slug')
+      .eq('slug', restaurantSlug)
+      .single();
+    if (rErr || !restaurant) return showError();
+
+    const { data: dish, error: dErr } = await db
+      .from('dishes')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('slug', dishSlug)
+      .single();
+    if (dErr || !dish) return showError();
+
+    // Fire view log silently — no await, never blocks
+    logView(dish.id, restaurant.id);
+
+    renderDish(restaurant, dish);
+  } catch (e) {
+    showError();
+  }
+}
+
+function renderDish(restaurant, dish) {
+  document.title = `${dish.dish_name} — ${restaurant.name}`;
+
+  // Back link
+  document.getElementById('back-link').href = `menu.html?restaurant=${encodeURIComponent(restaurant.slug)}`;
+
+  // Dish info
+  document.getElementById('dish-name').textContent = dish.dish_name;
+  document.getElementById('dish-price').textContent = dish.dish_price;
+  document.getElementById('dish-description').textContent = dish.dish_description || '';
+  if (!dish.dish_description) document.getElementById('dish-description').style.display = 'none';
+
+  // 3D model viewer
+  const modelContainer = document.getElementById('model-container');
+  if (dish.model_url) {
+    const mv = document.createElement('model-viewer');
+    mv.setAttribute('src', dish.model_url);
+    if (dish.usdz_url) mv.setAttribute('ios-src', dish.usdz_url);
+    mv.setAttribute('alt', dish.dish_name);
+    mv.setAttribute('auto-rotate', '');
+    mv.setAttribute('camera-controls', '');
+    mv.setAttribute('shadow-intensity', '1');
+    mv.setAttribute('exposure', '0.9');
+    mv.setAttribute('style', 'width:100%;height:100%;background:transparent;');
+    modelContainer.appendChild(mv);
+  } else {
+    modelContainer.innerHTML = `
+      <div class="model-no-src">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="12" y="12" width="40" height="40" rx="4" stroke="#c8a96e" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <path d="M32 22v20M22 32h20" stroke="#c8a96e" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span>3D model coming soon</span>
+      </div>`;
+  }
+
+  // AR button
+  const device = detectDevice();
+  const arSection = document.getElementById('ar-section');
+
+  if (dish.model_url) {
+    if (device === 'ios' && dish.usdz_url) {
+      // iPhone: Quick Look via anchor tag
+      arSection.innerHTML = `
+        <a class="ar-btn" href="${escHtml(dish.usdz_url)}" rel="ar">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 2L3 6v8l7 4 7-4V6L10 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M10 2v12M3 6l7 4 7-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          View in AR on Your Table
+        </a>
+        <div class="ar-note">Opens in Apple AR — point your camera at a flat surface</div>`;
+    } else if (device === 'android' || device === 'unknown') {
+      // Android: model-viewer AR button trigger
+      arSection.innerHTML = `
+        <button class="ar-btn" id="ar-trigger-btn">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 2L3 6v8l7 4 7-4V6L10 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M10 2v12M3 6l7 4 7-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          View in AR on Your Table
+        </button>
+        <div class="ar-note">Opens in Google AR — point at a flat surface to place</div>`;
+
+      // Trigger model-viewer's AR mode
+      document.getElementById('ar-trigger-btn').addEventListener('click', () => {
+        const mv = document.querySelector('model-viewer');
+        if (mv && mv.canActivateAR) {
+          mv.activateAR();
+        } else if (mv) {
+          mv.activateAR();
+        }
+      });
+    }
+  } else {
+    arSection.innerHTML = `
+      <div style="text-align:center; padding:16px 0; color:var(--muted); font-size:13px;">
+        3D model not yet available for this dish
+      </div>`;
+  }
+
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('main').style.display = 'block';
+}
+
+function showError() {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('error-screen').style.display = 'flex';
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+</body>
+</html>
