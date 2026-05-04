@@ -1,683 +1,599 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>D'Studio AR — Admin Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  :root {
-    --gold: #c8a96e;
-    --gold-dim: rgba(200,169,110,0.12);
-    --gold-mid: rgba(200,169,110,0.25);
-    --bg: #080808;
-    --surface: #111111;
-    --surface2: #181818;
-    --border: rgba(200,169,110,0.15);
-    --text: #e8e4dc;
-    --muted: rgba(232,228,220,0.45);
-    --error: #c0392b;
-    --success: #27ae60;
-    --radius: 8px;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; min-height: 100vh; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D'Studio AR — Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #c8a96e;
+      --accent-dim: rgba(200,169,110,0.1);
+      --accent-border: rgba(200,169,110,0.25);
+      --bg: #080808;
+      --surface: #101010;
+      --surface2: #161616;
+      --border: #1e1e1e;
+      --text: #efefef;
+      --muted: #555;
+      --danger: #e05555;
+      --success: #4caf50;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); min-height:100vh; }
 
-  /* ── LOGIN ────────────────────────────────────── */
-  #login-screen {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.07) 0%, transparent 60%);
-    padding: 24px;
-  }
-  .login-box {
-    width: 100%; max-width: 380px; padding: 48px 40px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    text-align: center;
-  }
-  .login-box img { width: 120px; margin-bottom: 32px; }
-  .login-logo-text { display:none; font-family:'Cormorant Garamond',serif; font-size:26px; color:var(--gold); margin-bottom:32px; }
-  .login-box h1 {
-    font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300;
-    color: var(--gold); letter-spacing: 0.03em; margin-bottom: 6px;
-  }
-  .login-box p { color: var(--muted); margin-bottom: 32px; font-size: 13px; }
-  .login-box input {
-    width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border);
-    border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif;
-    font-size: 14px; margin-bottom: 12px; transition: border-color 0.2s;
-  }
-  .login-box input:focus { outline: none; border-color: var(--gold); }
-  .login-error {
-    color: #e74c3c; font-size: 12px; margin-bottom: 12px;
-    padding: 10px 14px; background: rgba(192,57,43,0.1); border-radius: 6px;
-    border: 1px solid rgba(192,57,43,0.2); display: none; text-align: left;
-  }
-  .btn-primary {
-    width: 100%; padding: 13px; background: var(--gold); border: none; border-radius: var(--radius);
-    color: #080808; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 14px;
-    cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.2s;
-  }
-  .btn-primary:hover { opacity: 0.85; }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* LOGIN */
+    #loginSection {
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; min-height:100vh; padding:40px 20px;
+      background:radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.06) 0%, transparent 70%);
+    }
+    .login-logo { width:60px; filter:invert(1); opacity:0.85; margin-bottom:18px; }
+    .login-title { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300; letter-spacing:8px; text-transform:uppercase; margin-bottom:6px; }
+    .login-sub { font-size:10px; letter-spacing:4px; color:var(--muted); text-transform:uppercase; margin-bottom:48px; }
+    .login-box { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:36px; width:100%; max-width:420px; }
+    .login-box label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+    .login-box input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:13px 15px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; outline:none; transition:border-color 0.2s; margin-bottom:16px; }
+    .login-box input:focus { border-color:var(--accent); }
+    .error-msg { color:var(--danger); font-size:12px; text-align:center; margin-bottom:12px; display:none; letter-spacing:1px; }
 
-  /* ── DASHBOARD SHELL ──────────────────────────── */
-  #dashboard { display: none; }
-  .topbar {
-    position: sticky; top: 0; z-index: 100;
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 0 24px; height: 60px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .topbar img { height: 28px; }
-  .topbar-logo-text { font-family:'Cormorant Garamond',serif; color:var(--gold); font-size:18px; display:none; }
-  .topbar-right { display: flex; align-items: center; gap: 16px; }
-  .topbar-email { color: var(--muted); font-size: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .btn-logout {
-    padding: 7px 16px; background: transparent; border: 1px solid var(--border);
-    border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, color 0.2s;
-  }
-  .btn-logout:hover { border-color: var(--gold); color: var(--gold); }
+    /* BUTTONS */
+    .btn-primary { width:100%; padding:15px; background:var(--accent); color:#080808; border:none; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:opacity 0.2s; }
+    .btn-primary:hover { opacity:0.85; }
+    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+    .btn-secondary { background:transparent; border:1px solid var(--border); color:var(--muted); padding:8px 18px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
+    .btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
+    .btn-danger { background:transparent; border:1px solid rgba(224,85,85,0.3); color:var(--danger); padding:7px 14px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
+    .btn-danger:hover { background:var(--danger); color:white; }
 
-  .main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    /* DASHBOARD */
+    #dashboard { display:none; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,8,8,0.96); backdrop-filter:blur(16px); z-index:100; }
+    .topbar-left { display:flex; align-items:center; gap:14px; }
+    .topbar-logo { width:34px; filter:invert(1); opacity:0.8; }
+    .topbar-title { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; letter-spacing:5px; text-transform:uppercase; }
+    .topbar-right { display:flex; align-items:center; gap:16px; }
+    .badge { font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+    .badge span { color:var(--accent); }
 
-  /* ── STATS ROW ────────────────────────────────── */
-  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 24px; position: relative; overflow: hidden;
-  }
-  .stat-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--gold), transparent);
-  }
-  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 300; color: var(--gold); line-height: 1; }
-  .stat-label { color: var(--muted); font-size: 12px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .main { max-width:1100px; margin:0 auto; padding:28px 32px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    @media(max-width:800px) { .main { grid-template-columns:1fr; padding:20px; } .topbar { padding:16px 20px; } }
 
-  /* ── SECTION HEADING ──────────────────────────── */
-  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .section-head h2 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--gold); }
+    /* STATS */
+    .stats-row { grid-column:1/-1; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    @media(max-width:600px) { .stats-row { grid-template-columns:1fr; } }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px 26px; }
+    .stat-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+    .stat-value { font-family:'Cormorant Garamond',serif; font-size:40px; font-weight:300; color:var(--accent); line-height:1; }
 
-  .btn-sm {
-    padding: 8px 16px; background: var(--gold); border: none; border-radius: 6px;
-    color: #080808; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 12px;
-    cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.2s; white-space: nowrap;
-  }
-  .btn-sm:hover { opacity: 0.85; }
-  .btn-sm-outline {
-    padding: 7px 14px; background: transparent; border: 1px solid var(--border);
-    border-radius: 6px; color: var(--muted); font-family: 'DM Sans', sans-serif;
-    font-size: 12px; cursor: pointer; transition: border-color 0.2s, color 0.2s; white-space: nowrap;
-  }
-  .btn-sm-outline:hover { border-color: var(--gold); color: var(--gold); }
-  .btn-danger {
-    padding: 7px 14px; background: transparent; border: 1px solid rgba(192,57,43,0.4);
-    border-radius: 6px; color: rgba(192,57,43,0.8); font-family: 'DM Sans', sans-serif;
-    font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
-  }
-  .btn-danger:hover { border-color: var(--error); color: var(--error); }
+    /* PANELS */
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:28px; }
+    .panel-title { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:var(--accent); margin-bottom:24px; display:flex; align-items:center; gap:12px; }
+    .panel-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .full-width { grid-column:1/-1; }
 
-  /* ── CARDS ────────────────────────────────────── */
-  .restaurant-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
-  .restaurant-card-head {
-    padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
-    cursor: pointer; transition: background 0.15s;
-  }
-  .restaurant-card-head:hover { background: var(--surface2); }
-  .restaurant-card-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400; display: flex; align-items: center; gap: 10px; }
-  .badge-active { display: inline-block; padding: 2px 8px; background: rgba(39,174,96,0.15); border: 1px solid rgba(39,174,96,0.3); border-radius: 20px; color: #27ae60; font-size: 10px; font-family: 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; }
-  .badge-inactive { display: inline-block; padding: 2px 8px; background: rgba(232,228,220,0.05); border: 1px solid rgba(232,228,220,0.1); border-radius: 20px; color: var(--muted); font-size: 10px; font-family: 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; }
-  .card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .chevron { color: var(--muted); transition: transform 0.2s; font-size: 12px; }
-  .chevron.open { transform: rotate(180deg); }
-  .restaurant-card-body { display: none; border-top: 1px solid var(--border); padding: 20px; }
-  .restaurant-card-body.open { display: block; }
+    /* FORM */
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px;
+      padding:12px 15px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:border-color 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color:var(--accent); }
+    .form-group textarea { height:75px; resize:none; }
+    .form-group select { appearance:none; cursor:pointer; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:500px) { .form-row { grid-template-columns:1fr; } }
 
-  .card-meta { display: flex; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
-  .card-meta-item { display: flex; flex-direction: column; gap: 3px; }
-  .card-meta-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-  .card-meta-value { font-size: 13px; color: var(--text); }
-  .card-meta-value a { color: var(--gold); text-decoration: none; }
-  .card-meta-value a:hover { text-decoration: underline; }
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid var(--border); margin-top:4px; }
+    .toggle-label { font-size:12px; color:var(--muted); letter-spacing:1px; }
+    .toggle { position:relative; width:44px; height:24px; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:var(--border); border-radius:24px; cursor:pointer; transition:0.3s; }
+    .toggle-slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:#555; border-radius:50%; transition:0.3s; }
+    .toggle input:checked + .toggle-slider { background:var(--accent); }
+    .toggle input:checked + .toggle-slider:before { transform:translateX(20px); background:#080808; }
 
-  /* ── DISHES ───────────────────────────────────── */
-  .dishes-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .dishes-section-head span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-  .dish-row {
-    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-    padding: 12px 16px; margin-bottom: 8px;
-    display: flex; align-items: center; gap: 12px; justify-content: space-between;
-  }
-  .dish-info { flex: 1; min-width: 0; }
-  .dish-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .dish-price { font-size: 12px; color: var(--gold); margin-top: 2px; }
-  .dish-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    /* SUCCESS */
+    .success-box { display:none; background:var(--accent-dim); border:1px solid var(--accent-border); border-radius:12px; padding:18px; margin-top:16px; }
+    .success-box p { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+    .success-link { font-size:12px; color:var(--text); word-break:break-all; display:block; margin-bottom:10px; opacity:0.6; line-height:1.5; }
 
-  /* ── MODAL ────────────────────────────────────── */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(8,8,8,0.85); z-index: 200;
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-    opacity: 0; pointer-events: none; transition: opacity 0.2s;
-  }
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
-    padding: 32px; transform: translateY(12px); transition: transform 0.2s;
-  }
-  .modal-overlay.open .modal { transform: translateY(0); }
-  .modal h3 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--gold); margin-bottom: 24px; }
-  .form-group { margin-bottom: 16px; }
-  .form-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
-  .form-input {
-    width: 100%; padding: 11px 14px; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif;
-    font-size: 14px; transition: border-color 0.2s;
-  }
-  .form-input:focus { outline: none; border-color: var(--gold); }
-  .form-textarea { resize: vertical; min-height: 80px; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .form-actions { display: flex; gap: 10px; margin-top: 24px; }
-  .form-error { color: var(--error); font-size: 12px; margin-top: 8px; padding: 8px 12px; background: rgba(192,57,43,0.08); border-radius: 4px; display: none; }
-  .form-check { display: flex; align-items: center; gap: 10px; }
-  .form-check input { accent-color: var(--gold); }
+    /* RESTAURANT LIST */
+    .restaurant-item { border:1px solid var(--border); border-radius:14px; margin-bottom:12px; overflow:hidden; }
+    .restaurant-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; cursor:pointer; transition:background 0.2s; gap:12px; }
+    .restaurant-header:hover { background:var(--surface2); }
+    .restaurant-info { flex:1; min-width:0; }
+    .restaurant-name-display { font-size:15px; font-weight:500; margin-bottom:3px; }
+    .restaurant-meta { font-size:11px; color:var(--muted); }
+    .active-badge { font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:3px 10px; border-radius:20px; }
+    .active-badge.active { background:rgba(76,175,80,0.15); color:#4caf50; border:1px solid rgba(76,175,80,0.3); }
+    .active-badge.demo { background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent-border); }
+    .restaurant-actions { display:flex; gap:8px; align-items:center; flex-shrink:0; }
+    .chevron { font-size:12px; color:var(--muted); transition:transform 0.2s; }
+    .chevron.open { transform:rotate(180deg); }
 
-  /* ── TOAST ────────────────────────────────────── */
-  .toast {
-    position: fixed; bottom: 24px; right: 24px; z-index: 300;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-    padding: 14px 20px; font-size: 13px; max-width: 300px;
-    transform: translateY(20px); opacity: 0; transition: all 0.25s; pointer-events: none;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.success { border-color: rgba(39,174,96,0.4); color: #2ecc71; }
-  .toast.error { border-color: rgba(192,57,43,0.4); color: #e74c3c; }
+    /* DISHES */
+    .dishes-section { display:none; border-top:1px solid var(--border); padding:20px; background:var(--surface2); }
+    .dish-item { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); gap:12px; }
+    .dish-item:last-of-type { border-bottom:none; }
+    .dish-info { flex:1; min-width:0; }
+    .dish-name-display { font-size:14px; font-weight:500; margin-bottom:3px; }
+    .dish-price-display { font-size:12px; color:var(--accent); }
+    .dish-actions { display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+    .add-dish-btn { margin-top:16px; width:100%; }
 
-  /* ── EMPTY / LOADING ──────────────────────────── */
-  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
-  .empty-state p { margin-bottom: 16px; }
-  .loading { text-align: center; padding: 48px; color: var(--muted); }
-  .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+    /* DISH FORM */
+    .dish-form { display:none; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-top:16px; }
+    .dish-form .panel-title { margin-bottom:16px; }
 
-  @media (max-width: 600px) {
-    .stats-row { grid-template-columns: 1fr; }
-    .main { padding: 20px 16px; }
-    .topbar { padding: 0 16px; }
-    .form-row { grid-template-columns: 1fr; }
-    .card-actions { gap: 6px; }
-    .modal { padding: 24px 20px; }
-    .topbar-email { display: none; }
-  }
-</style>
+    .empty-state { text-align:center; padding:32px 20px; color:var(--muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; }
+    .loading-state { text-align:center; padding:24px; color:var(--muted); font-size:11px; letter-spacing:3px; text-transform:uppercase; }
+
+    /* TOAST */
+    .toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--accent-border); border-radius:12px; padding:14px 20px; font-size:13px; color:var(--text); z-index:9999; transform:translateY(100px); opacity:0; transition:all 0.3s; max-width:320px; }
+    .toast.show { transform:translateY(0); opacity:1; }
+    .toast.error { border-color:rgba(224,85,85,0.4); }
+  </style>
 </head>
 <body>
 
-<!-- ── LOGIN ─────────────────────────────────────────────── -->
-<div id="login-screen">
+<!-- LOGIN -->
+<div id="loginSection">
+  <img src="D_Studio_logo.png" class="login-logo" alt="D'Studio">
+  <h1 class="login-title">D'Studio</h1>
+  <p class="login-sub">AR Management Portal</p>
   <div class="login-box">
-    <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none';document.querySelector('.login-logo-text').style.display='block'" />
-    <div class="login-logo-text">D'Studio AR</div>
-    <h1>Admin Dashboard</h1>
-    <p>Sign in with your D'Studio admin account</p>
-    <div class="login-error" id="login-error"></div>
-    <input type="email" id="login-email" placeholder="Email address" autocomplete="email" />
-    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password" />
-    <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email">
+    <label>Password</label>
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+    <p class="error-msg" id="errorMsg">Incorrect email or password.</p>
+    <button class="btn-primary" id="loginBtn" onclick="login()">Access Dashboard</button>
   </div>
 </div>
 
-<!-- ── DASHBOARD ─────────────────────────────────────────── -->
+<!-- DASHBOARD -->
 <div id="dashboard">
   <div class="topbar">
-    <img src="D_Studio_logo.png" alt="D'Studio" height="28" onerror="this.style.display='none';document.querySelector('.topbar-logo-text').style.display='block'" />
-    <span class="topbar-logo-text">D'Studio AR</span>
+    <div class="topbar-left">
+      <img src="D_Studio_logo.png" class="topbar-logo" alt="D'Studio">
+      <span class="topbar-title">D'Studio AR</span>
+    </div>
     <div class="topbar-right">
-      <span class="topbar-email" id="topbar-email"></span>
-      <button class="btn-logout" onclick="doLogout()">Log Out</button>
+      <span class="badge">Active clients: <span id="clientCountBadge">0</span></span>
+      <button class="btn-secondary" onclick="logout()">Logout</button>
     </div>
   </div>
 
   <div class="main">
+
+    <!-- STATS -->
     <div class="stats-row">
       <div class="stat-card">
-        <div class="stat-value" id="stat-clients">—</div>
         <div class="stat-label">Active Clients</div>
+        <div class="stat-value" id="statActive">0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value" id="stat-dishes">—</div>
-        <div class="stat-label">Total AR Dishes</div>
+        <div class="stat-label">AR Menus Live</div>
+        <div class="stat-value" id="statMenus">0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value" id="stat-revenue">—</div>
         <div class="stat-label">Est. Monthly Revenue</div>
+        <div class="stat-value" id="statRevenue">R0</div>
       </div>
     </div>
 
-    <div class="section-head">
-      <h2>Restaurants</h2>
-      <button class="btn-sm" onclick="openAddRestaurantModal()">+ Add Restaurant</button>
-    </div>
-    <div id="restaurants-list">
-      <div class="loading"><div class="spinner"></div>Loading clients…</div>
-    </div>
-  </div>
-</div>
-
-<!-- ── MODAL: ADD RESTAURANT ────────────────────────────── -->
-<div class="modal-overlay" id="modal-add-restaurant">
-  <div class="modal">
-    <h3>Add Restaurant</h3>
-    <div class="form-group">
-      <label class="form-label">Restaurant Name</label>
-      <input class="form-input" type="text" id="new-rest-name" placeholder="e.g. Hudson's Burger Co" />
-    </div>
-    <div class="form-group">
-      <label class="form-label">Slug <span style="color:var(--muted);font-size:11px;">(lowercase, hyphens only)</span></label>
-      <input class="form-input" type="text" id="new-rest-slug" placeholder="e.g. hudsons-burger-co" />
-    </div>
-    <div class="form-group">
-      <label class="form-label">Client Analytics Password</label>
-      <input class="form-input" type="text" id="new-rest-password" placeholder="e.g. hudsons2024" />
-    </div>
-    <div class="form-group form-check">
-      <input type="checkbox" id="new-rest-active" />
-      <label for="new-rest-active" style="font-size:13px;">Active paying client</label>
-    </div>
-    <div class="form-error" id="add-rest-error"></div>
-    <div class="form-actions">
-      <button class="btn-primary" onclick="submitAddRestaurant()">Create Restaurant</button>
-      <button class="btn-sm-outline" onclick="closeModal('modal-add-restaurant')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── MODAL: EDIT RESTAURANT ────────────────────────────── -->
-<div class="modal-overlay" id="modal-edit-restaurant">
-  <div class="modal">
-    <h3>Edit Restaurant</h3>
-    <input type="hidden" id="edit-rest-id" />
-    <div class="form-group">
-      <label class="form-label">Restaurant Name</label>
-      <input class="form-input" type="text" id="edit-rest-name" />
-    </div>
-    <div class="form-group">
-      <label class="form-label">Slug</label>
-      <input class="form-input" type="text" id="edit-rest-slug" />
-    </div>
-    <div class="form-group">
-      <label class="form-label">Client Analytics Password</label>
-      <input class="form-input" type="text" id="edit-rest-password" />
-    </div>
-    <div class="form-group form-check">
-      <input type="checkbox" id="edit-rest-active" />
-      <label for="edit-rest-active" style="font-size:13px;">Active paying client</label>
-    </div>
-    <div class="form-error" id="edit-rest-error"></div>
-    <div class="form-actions">
-      <button class="btn-primary" onclick="submitEditRestaurant()">Save Changes</button>
-      <button class="btn-sm-outline" onclick="closeModal('modal-edit-restaurant')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── MODAL: ADD DISH ───────────────────────────────────── -->
-<div class="modal-overlay" id="modal-add-dish">
-  <div class="modal">
-    <h3>Add Dish</h3>
-    <input type="hidden" id="add-dish-restaurant-id" />
-    <div class="form-group">
-      <label class="form-label">Dish Name</label>
-      <input class="form-input" type="text" id="new-dish-name" placeholder="e.g. Classic Smash Burger" />
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Price</label>
-        <input class="form-input" type="text" id="new-dish-price" placeholder="e.g. R 189" />
+    <!-- ADD RESTAURANT -->
+    <div class="panel">
+      <div class="panel-title">Add New Restaurant</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Restaurant Name *</label>
+          <input type="text" id="newRestName" placeholder="e.g. Hudson's Burger Co.">
+        </div>
+        <div class="form-group">
+          <label>Slug * (URL identifier)</label>
+          <input type="text" id="newRestSlug" placeholder="e.g. hudsons-burger">
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Slug</label>
-        <input class="form-input" type="text" id="new-dish-slug" placeholder="e.g. classic-smash-burger" />
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client Email *</label>
+          <input type="email" id="newClientEmail" placeholder="owner@restaurant.com">
+        </div>
+        <div class="form-group">
+          <label>Client Password *</label>
+          <input type="password" id="newClientPassword" placeholder="Set their login password">
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Mark as Active Paying Client</span>
+        <label class="toggle">
+          <input type="checkbox" id="newRestActive">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <button class="btn-primary" id="addRestBtn" onclick="addRestaurant()" style="margin-top:20px;">Add Restaurant</button>
+      <div class="success-box" id="restSuccessBox">
+        <p>Restaurant Added</p>
+        <span class="success-link" id="restSuccessMsg"></span>
+        <button class="btn-secondary" onclick="copyRestLink()">Copy Menu Link</button>
       </div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Description</label>
-      <textarea class="form-input form-textarea" id="new-dish-desc" placeholder="Short description…"></textarea>
+
+    <!-- HOW IT WORKS -->
+    <div class="panel">
+      <div class="panel-title">Workflow</div>
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 01</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Add restaurant + client login</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Enter restaurant details and set client credentials. A Supabase Auth account is created automatically.</div>
+        </div>
+        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 02</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Add their dishes</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Expand the restaurant below and add each dish with its GLB and USDZ model URLs.</div>
+        </div>
+        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 03</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Copy dish AR links</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Each dish gets a unique link. Take it to qr-code-generator.com to generate a QR code.</div>
+        </div>
+        <div style="padding:14px 0;">
+          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 04</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Client goes live</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Customer scans QR → sees food in AR on table. Client logs into analytics to see engagement data.</div>
+        </div>
+      </div>
     </div>
-    <div class="form-group">
-      <label class="form-label">3D Model URL (GLB — Android)</label>
-      <input class="form-input" type="text" id="new-dish-model" placeholder="https://…/model.glb" />
+
+    <!-- CLIENT LIST -->
+    <div class="panel full-width">
+      <div class="panel-title">All Restaurants</div>
+      <div id="restaurantList"><div class="loading-state">Loading...</div></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">USDZ URL (iPhone AR)</label>
-      <input class="form-input" type="text" id="new-dish-usdz" placeholder="https://…/model.usdz" />
-    </div>
-    <div class="form-error" id="add-dish-error"></div>
-    <div class="form-actions">
-      <button class="btn-primary" onclick="submitAddDish()">Add Dish</button>
-      <button class="btn-sm-outline" onclick="closeModal('modal-add-dish')">Cancel</button>
-    </div>
+
   </div>
 </div>
 
-<!-- ── TOAST ─────────────────────────────────────────────── -->
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
 const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
-const BASE_URL = 'https://dstudio-ar.vercel.app';
+const EDGE_FN_URL = 'https://kynmckifaixaakpdarxn.supabase.co/functions/v1/create-client-user';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── AUTH ─────────────────────────────────────────────────
-async function boot() {
-  const { data: { session } } = await db.auth.getSession();
-  if (session) {
-    showDashboard(session.user);
-  }
+let currentSession = null;
+let lastRestLink = '';
+
+// ── TOAST ──
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '') + ' show';
+  setTimeout(() => { t.className = 'toast' + (isError ? ' error' : ''); }, 3500);
 }
 
-document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-pw').focus(); });
-document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-
-async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-pw').value;
-  const errEl = document.getElementById('login-error');
-  const btn = document.getElementById('login-btn');
+// ── AUTH ──
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
 
   if (!email || !password) {
-    errEl.textContent = 'Please enter your email and password.';
-    errEl.style.display = 'block';
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('errorMsg').textContent = 'Please enter email and password.';
     return;
   }
 
-  btn.disabled = true; btn.textContent = 'Signing in…';
-  errEl.style.display = 'none';
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
 
   const { data, error } = await db.auth.signInWithPassword({ email, password });
 
-  if (error) {
-    errEl.textContent = 'Incorrect email or password.';
-    errEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Sign In';
+  btn.textContent = 'Access Dashboard';
+  btn.disabled = false;
+
+  if (error || !data.session) {
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('errorMsg').textContent = 'Incorrect email or password.';
     return;
   }
 
-  showDashboard(data.user);
-}
-
-async function doLogout() {
-  await db.auth.signOut();
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-email').value = '';
-  document.getElementById('login-pw').value = '';
-  document.getElementById('login-btn').disabled = false;
-  document.getElementById('login-btn').textContent = 'Sign In';
-}
-
-function showDashboard(user) {
-  document.getElementById('login-screen').style.display = 'none';
+  currentSession = data.session;
+  document.getElementById('loginSection').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
-  document.getElementById('topbar-email').textContent = user.email;
   loadDashboard();
 }
 
-// ── LOAD DATA ────────────────────────────────────────────
-async function loadDashboard() {
-  try {
-    const { data: { user } } = await db.auth.getUser();
-    if (!user) return doLogout();
-
-    const [{ data: restaurants, error: rErr }, { data: dishes, error: dErr }] = await Promise.all([
-      db.from('restaurants').select('*').order('created_at', { ascending: false }),
-      db.from('dishes').select('*')
-    ]);
-
-    if (rErr) throw rErr;
-    if (dErr) throw dErr;
-
-    const active = (restaurants || []).filter(r => r.is_active);
-    document.getElementById('stat-clients').textContent = active.length;
-    document.getElementById('stat-dishes').textContent = (dishes || []).length;
-    document.getElementById('stat-revenue').textContent = `R ${(active.length * 650).toLocaleString()}`;
-
-    renderRestaurants(restaurants || [], dishes || []);
-  } catch (e) {
-    document.getElementById('restaurants-list').innerHTML = `<div class="empty-state"><p style="color:var(--error)">Failed to load: ${e.message}</p></div>`;
-  }
+async function logout() {
+  await db.auth.signOut();
+  currentSession = null;
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginSection').style.display = 'flex';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('errorMsg').style.display = 'none';
 }
 
-function renderRestaurants(restaurants, dishes) {
-  const container = document.getElementById('restaurants-list');
-  if (!restaurants.length) {
-    container.innerHTML = '<div class="empty-state"><p>No restaurants yet.</p><button class="btn-sm" onclick="openAddRestaurantModal()">Add your first restaurant</button></div>';
+// ── LOAD DASHBOARD ──
+async function loadDashboard() {
+  const { data, error } = await db.from('restaurants').select('*, dishes(count)').order('created_at', { ascending: false });
+
+  if (error) {
+    document.getElementById('restaurantList').innerHTML = '<div class="empty-state">Error loading restaurants.</div>';
     return;
   }
 
-  container.innerHTML = restaurants.map(r => {
-    const rDishes = dishes.filter(d => d.restaurant_id === r.id);
-    const menuLink = `${BASE_URL}/menu.html?restaurant=${r.slug}`;
-    const analyticsLink = `${BASE_URL}/analytics.html?restaurant=${r.slug}`;
-    const badge = r.is_active ? '<span class="badge-active">Active</span>' : '<span class="badge-inactive">Demo</span>';
+  const active = data.filter(r => r.is_active).length;
+  const totalDishes = data.reduce((sum, r) => sum + (r.dishes?.[0]?.count || 0), 0);
 
-    const dishRows = rDishes.length ? rDishes.map(d => {
-      const arLink = `${BASE_URL}/dish.html?restaurant=${r.slug}&dish=${d.slug}`;
-      return `
-        <div class="dish-row">
-          <div class="dish-info">
-            <div class="dish-name">${escHtml(d.dish_name)}</div>
-            <div class="dish-price">${escHtml(d.dish_price)}</div>
-          </div>
-          <div class="dish-actions">
-            <button class="btn-sm-outline" onclick="copyToClipboard('${arLink}', 'AR link copied')">Copy AR Link</button>
-            <button class="btn-danger" onclick="deleteDish('${d.id}')">Delete</button>
-          </div>
-        </div>`;
-    }).join('') : `<div style="color:var(--muted);font-size:13px;padding:8px 0;">No dishes yet.</div>`;
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statMenus').textContent = totalDishes;
+  document.getElementById('statRevenue').textContent = 'R' + (active * 800).toLocaleString();
+  document.getElementById('clientCountBadge').textContent = active;
 
-    return `
-      <div class="restaurant-card" id="card-${r.id}">
-        <div class="restaurant-card-head" onclick="toggleCard('${r.id}')">
-          <div class="restaurant-card-name">${escHtml(r.name)} ${badge}</div>
-          <div class="card-actions" onclick="event.stopPropagation()">
-            <button class="btn-sm-outline" onclick="copyToClipboard('${menuLink}', 'Menu link copied')">Menu Link</button>
-            <button class="btn-sm-outline" onclick="openEditRestaurantModal('${r.id}','${escAttr(r.name)}','${escAttr(r.slug)}','${escAttr(r.client_password||'')}',${r.is_active})">Edit</button>
-            <button class="btn-danger" onclick="deleteRestaurant('${r.id}')">Delete</button>
-            <span class="chevron" id="chevron-${r.id}">▼</span>
+  if (data.length === 0) {
+    document.getElementById('restaurantList').innerHTML = '<div class="empty-state">No restaurants yet — add your first one above.</div>';
+    return;
+  }
+
+  document.getElementById('restaurantList').innerHTML = data.map(r => `
+    <div class="restaurant-item" id="rest-${r.id}">
+      <div class="restaurant-header" onclick="toggleRestaurant('${r.id}')">
+        <div class="restaurant-info">
+          <div class="restaurant-name-display">${r.name}</div>
+          <div class="restaurant-meta">${r.slug} · ${r.client_email || 'No email'}</div>
+        </div>
+        <div class="restaurant-actions">
+          <span class="active-badge ${r.is_active ? 'active' : 'demo'}">${r.is_active ? 'Active' : 'Demo'}</span>
+          <button class="btn-secondary" onclick="event.stopPropagation(); copyMenuLink('${r.slug}')">Menu Link</button>
+          <span class="chevron" id="chevron-${r.id}">▼</span>
+        </div>
+      </div>
+      <div class="dishes-section" id="dishes-${r.id}">
+        <div id="dish-list-${r.id}"><div class="loading-state">Loading dishes...</div></div>
+        <button class="btn-secondary add-dish-btn" onclick="toggleDishForm('${r.id}')">+ Add Dish</button>
+        <div class="dish-form" id="dish-form-${r.id}">
+          <div class="panel-title">New Dish</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Dish Name *</label>
+              <input type="text" id="dname-${r.id}" placeholder="e.g. Classic Smash">
+            </div>
+            <div class="form-group">
+              <label>Price *</label>
+              <input type="text" id="dprice-${r.id}" placeholder="e.g. R 165">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="ddesc-${r.id}" placeholder="Describe the dish..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>GLB Model URL (Android) *</label>
+            <input type="text" id="dglb-${r.id}" placeholder="https://dstudio-ar.vercel.app/burger.glb">
+          </div>
+          <div class="form-group">
+            <label>USDZ Model URL (iPhone) *</label>
+            <input type="text" id="dusdz-${r.id}" placeholder="https://dstudio-ar.vercel.app/burger.usdz">
+          </div>
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <button class="btn-primary" onclick="addDish('${r.id}')" style="flex:1;">Save Dish</button>
+            <button class="btn-secondary" onclick="toggleDishForm('${r.id}')">Cancel</button>
           </div>
         </div>
-        <div class="restaurant-card-body" id="body-${r.id}">
-          <div class="card-meta">
-            <div class="card-meta-item">
-              <span class="card-meta-label">Menu URL</span>
-              <span class="card-meta-value"><a href="${menuLink}" target="_blank">/menu.html?restaurant=${escHtml(r.slug)}</a></span>
-            </div>
-            <div class="card-meta-item">
-              <span class="card-meta-label">Analytics</span>
-              <span class="card-meta-value"><a href="${analyticsLink}" target="_blank">View Dashboard</a></span>
-            </div>
-            <div class="card-meta-item">
-              <span class="card-meta-label">Client Password</span>
-              <span class="card-meta-value" style="font-family:monospace">${escHtml(r.client_password||'—')}</span>
-            </div>
-          </div>
-          <div class="dishes-section">
-            <div class="dishes-section-head">
-              <span>Dishes (${rDishes.length})</span>
-              <button class="btn-sm" onclick="openAddDishModal('${r.id}')">+ Add Dish</button>
-            </div>
-            <div id="dishes-${r.id}">${dishRows}</div>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
+      </div>
+    </div>
+  `).join('');
 }
 
-function toggleCard(id) {
-  document.getElementById(`body-${id}`).classList.toggle('open');
-  document.getElementById(`chevron-${id}`).classList.toggle('open');
+// ── ADD RESTAURANT ──
+async function addRestaurant() {
+  const name = document.getElementById('newRestName').value.trim();
+  const slug = document.getElementById('newRestSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
+  const email = document.getElementById('newClientEmail').value.trim();
+  const password = document.getElementById('newClientPassword').value;
+  const isActive = document.getElementById('newRestActive').checked;
+
+  if (!name || !slug || !email || !password) {
+    showToast('Please fill in all required fields.', true);
+    return;
+  }
+
+  const btn = document.getElementById('addRestBtn');
+  btn.textContent = 'Creating...';
+  btn.disabled = true;
+
+  try {
+    // Create Supabase Auth user via Edge Function
+    const res = await fetch(EDGE_FN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession.access_token}` },
+      body: JSON.stringify({ email, password })
+    });
+
+    const result = await res.json();
+
+    if (!res.ok || result.error) {
+      showToast('Error creating client account: ' + (result.error || 'Unknown error'), true);
+      btn.textContent = 'Add Restaurant';
+      btn.disabled = false;
+      return;
+    }
+
+    const authUserId = result.user_id;
+
+    // Insert restaurant
+    const { error: restError } = await db.from('restaurants').insert([{
+      name, slug, is_active: isActive,
+      client_email: email,
+      auth_user_id: authUserId,
+      user_id: currentSession.user.id
+    }]);
+
+    if (restError) {
+      showToast('Error saving restaurant: ' + restError.message, true);
+      btn.textContent = 'Add Restaurant';
+      btn.disabled = false;
+      return;
+    }
+
+    lastRestLink = `https://dstudio-ar.vercel.app/menu.html?restaurant=${slug}`;
+    document.getElementById('restSuccessMsg').textContent = lastRestLink;
+    document.getElementById('restSuccessBox').style.display = 'block';
+
+    document.getElementById('newRestName').value = '';
+    document.getElementById('newRestSlug').value = '';
+    document.getElementById('newClientEmail').value = '';
+    document.getElementById('newClientPassword').value = '';
+    document.getElementById('newRestActive').checked = false;
+
+    showToast('Restaurant added successfully.');
+    loadDashboard();
+
+  } catch (e) {
+    showToast('Unexpected error: ' + e.message, true);
+  }
+
+  btn.textContent = 'Add Restaurant';
+  btn.disabled = false;
 }
 
-// ── ADD RESTAURANT ───────────────────────────────────────
-function openAddRestaurantModal() {
-  ['new-rest-name','new-rest-slug','new-rest-password'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('new-rest-active').checked = false;
-  hideError('add-rest-error');
-  openModal('modal-add-restaurant');
+// ── TOGGLE RESTAURANT ──
+function toggleRestaurant(id) {
+  const section = document.getElementById(`dishes-${id}`);
+  const chevron = document.getElementById(`chevron-${id}`);
+  const isOpen = section.style.display === 'block';
+
+  section.style.display = isOpen ? 'none' : 'block';
+  chevron.className = 'chevron' + (isOpen ? '' : ' open');
+
+  if (!isOpen) loadDishes(id);
 }
 
-document.getElementById('new-rest-name').addEventListener('input', function() {
-  document.getElementById('new-rest-slug').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+// ── LOAD DISHES ──
+async function loadDishes(restaurantId) {
+  const { data, error } = await db.from('dishes').select('*').eq('restaurant_id', restaurantId).order('created_at', { ascending: true });
+
+  const container = document.getElementById(`dish-list-${restaurantId}`);
+
+  if (error) { container.innerHTML = '<div class="empty-state">Error loading dishes.</div>'; return; }
+
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div class="empty-state">No dishes yet — add one below.</div>';
+    return;
+  }
+
+  container.innerHTML = data.map(d => `
+    <div class="dish-item" id="dish-item-${d.id}">
+      <div class="dish-info">
+        <div class="dish-name-display">${d.dish_name}</div>
+        <div class="dish-price-display">${d.dish_price}</div>
+      </div>
+      <div class="dish-actions">
+        <button class="btn-secondary" onclick="copyDishLink('${d.slug}', '${restaurantId}')">Copy AR Link</button>
+        <button class="btn-danger" onclick="deleteDish('${d.id}', '${restaurantId}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── TOGGLE DISH FORM ──
+function toggleDishForm(restaurantId) {
+  const form = document.getElementById(`dish-form-${restaurantId}`);
+  form.style.display = form.style.display === 'block' ? 'none' : 'block';
+}
+
+// ── ADD DISH ──
+async function addDish(restaurantId) {
+  const dishName = document.getElementById(`dname-${restaurantId}`).value.trim();
+  const dishPrice = document.getElementById(`dprice-${restaurantId}`).value.trim();
+  const dishDesc = document.getElementById(`ddesc-${restaurantId}`).value.trim();
+  const modelUrl = document.getElementById(`dglb-${restaurantId}`).value.trim();
+  const usdzUrl = document.getElementById(`dusdz-${restaurantId}`).value.trim();
+
+  if (!dishName || !dishPrice || !modelUrl || !usdzUrl) {
+    showToast('Please fill in all required dish fields.', true);
+    return;
+  }
+
+  const slug = dishName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now();
+
+  const { error } = await db.from('dishes').insert([{
+    restaurant_id: restaurantId,
+    dish_name: dishName,
+    dish_price: dishPrice,
+    dish_description: dishDesc,
+    model_url: modelUrl,
+    usdz_url: usdzUrl,
+    slug
+  }]);
+
+  if (error) { showToast('Error saving dish: ' + error.message, true); return; }
+
+  document.getElementById(`dname-${restaurantId}`).value = '';
+  document.getElementById(`dprice-${restaurantId}`).value = '';
+  document.getElementById(`ddesc-${restaurantId}`).value = '';
+  document.getElementById(`dglb-${restaurantId}`).value = '';
+  document.getElementById(`dusdz-${restaurantId}`).value = '';
+
+  toggleDishForm(restaurantId);
+  loadDishes(restaurantId);
+  loadDashboard();
+  showToast('Dish added successfully.');
+}
+
+// ── DELETE DISH ──
+async function deleteDish(dishId, restaurantId) {
+  if (!confirm('Delete this dish? This cannot be undone.')) return;
+
+  const { error } = await db.from('dishes').delete().eq('id', dishId);
+
+  if (error) { showToast('Error deleting dish: ' + error.message, true); return; }
+
+  loadDishes(restaurantId);
+  loadDashboard();
+  showToast('Dish deleted.');
+}
+
+// ── COPY LINKS ──
+function copyMenuLink(slug) {
+  const link = `https://dstudio-ar.vercel.app/menu.html?restaurant=${slug}`;
+  navigator.clipboard.writeText(link).then(() => showToast('Menu link copied!'));
+}
+
+function copyRestLink() {
+  navigator.clipboard.writeText(lastRestLink).then(() => showToast('Menu link copied!'));
+}
+
+function copyDishLink(dishSlug, restaurantId) {
+  const link = `https://dstudio-ar.vercel.app/dish.html?slug=${dishSlug}`;
+  navigator.clipboard.writeText(link).then(() => showToast('AR dish link copied!'));
+}
+
+// ── ENTER KEY ON LOGIN ──
+document.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') login();
 });
 
-async function submitAddRestaurant() {
-  const name = document.getElementById('new-rest-name').value.trim();
-  const slug = document.getElementById('new-rest-slug').value.trim();
-  const client_password = document.getElementById('new-rest-password').value.trim();
-  const is_active = document.getElementById('new-rest-active').checked;
-
-  if (!name || !slug || !client_password) return showError('add-rest-error', 'Please fill in all fields.');
-  if (!/^[a-z0-9-]+$/.test(slug)) return showError('add-rest-error', 'Slug must be lowercase letters, numbers and hyphens only.');
-
-  const { data: { user } } = await db.auth.getUser();
-  if (!user) return showError('add-rest-error', 'Not authenticated.');
-
-  const btn = event.target; btn.disabled = true; btn.textContent = 'Creating…';
-  try {
-    const { error } = await db.from('restaurants').insert({ name, slug, is_active, client_password, user_id: user.id });
-    if (error) throw error;
-    closeModal('modal-add-restaurant');
-    showToast('Restaurant created', 'success');
+// ── CHECK SESSION ON LOAD ──
+(async () => {
+  const { data } = await db.auth.getSession();
+  if (data.session) {
+    currentSession = data.session;
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
     loadDashboard();
-  } catch (e) {
-    showError('add-rest-error', e.message.includes('unique') ? 'That slug is already taken.' : e.message);
-  } finally { btn.disabled = false; btn.textContent = 'Create Restaurant'; }
-}
-
-// ── EDIT RESTAURANT ───────────────────────────────────────
-function openEditRestaurantModal(id, name, slug, password, isActive) {
-  document.getElementById('edit-rest-id').value = id;
-  document.getElementById('edit-rest-name').value = name;
-  document.getElementById('edit-rest-slug').value = slug;
-  document.getElementById('edit-rest-password').value = password;
-  document.getElementById('edit-rest-active').checked = isActive;
-  hideError('edit-rest-error');
-  openModal('modal-edit-restaurant');
-}
-
-async function submitEditRestaurant() {
-  const id = document.getElementById('edit-rest-id').value;
-  const name = document.getElementById('edit-rest-name').value.trim();
-  const slug = document.getElementById('edit-rest-slug').value.trim();
-  const client_password = document.getElementById('edit-rest-password').value.trim();
-  const is_active = document.getElementById('edit-rest-active').checked;
-
-  if (!name || !slug || !client_password) return showError('edit-rest-error', 'Please fill in all fields.');
-
-  const btn = event.target; btn.disabled = true; btn.textContent = 'Saving…';
-  try {
-    const { error } = await db.from('restaurants').update({ name, slug, is_active, client_password }).eq('id', id);
-    if (error) throw error;
-    closeModal('modal-edit-restaurant');
-    showToast('Restaurant updated', 'success');
-    loadDashboard();
-  } catch (e) {
-    showError('edit-rest-error', e.message);
-  } finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
-}
-
-async function deleteRestaurant(id) {
-  if (!confirm('Delete this restaurant and all its dishes? This cannot be undone.')) return;
-  try {
-    const { error } = await db.from('restaurants').delete().eq('id', id);
-    if (error) throw error;
-    showToast('Restaurant deleted', 'success');
-    loadDashboard();
-  } catch (e) { showToast('Delete failed: ' + e.message, 'error'); }
-}
-
-// ── ADD DISH ─────────────────────────────────────────────
-function openAddDishModal(restaurantId) {
-  document.getElementById('add-dish-restaurant-id').value = restaurantId;
-  ['new-dish-name','new-dish-price','new-dish-slug','new-dish-desc','new-dish-model','new-dish-usdz'].forEach(id => document.getElementById(id).value = '');
-  hideError('add-dish-error');
-  openModal('modal-add-dish');
-}
-
-document.getElementById('new-dish-name').addEventListener('input', function() {
-  document.getElementById('new-dish-slug').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-});
-
-async function submitAddDish() {
-  const restaurant_id = document.getElementById('add-dish-restaurant-id').value;
-  const dish_name = document.getElementById('new-dish-name').value.trim();
-  const dish_price = document.getElementById('new-dish-price').value.trim();
-  const slug = document.getElementById('new-dish-slug').value.trim();
-  const dish_description = document.getElementById('new-dish-desc').value.trim();
-  const model_url = document.getElementById('new-dish-model').value.trim();
-  const usdz_url = document.getElementById('new-dish-usdz').value.trim();
-
-  if (!dish_name || !dish_price || !slug) return showError('add-dish-error', 'Name, price and slug are required.');
-
-  const btn = event.target; btn.disabled = true; btn.textContent = 'Adding…';
-  try {
-    const { error } = await db.from('dishes').insert({ restaurant_id, dish_name, dish_price, slug, dish_description, model_url, usdz_url });
-    if (error) throw error;
-    closeModal('modal-add-dish');
-    showToast('Dish added', 'success');
-    loadDashboard();
-  } catch (e) {
-    showError('add-dish-error', e.message.includes('unique') ? 'A dish with that slug already exists.' : e.message);
-  } finally { btn.disabled = false; btn.textContent = 'Add Dish'; }
-}
-
-async function deleteDish(dishId) {
-  if (!confirm('Delete this dish?')) return;
-  try {
-    const { error } = await db.from('dishes').delete().eq('id', dishId);
-    if (error) throw error;
-    showToast('Dish deleted', 'success');
-    loadDashboard();
-  } catch (e) { showToast('Delete failed: ' + e.message, 'error'); }
-}
-
-// ── UTILITIES ────────────────────────────────────────────
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
-});
-function showError(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; }
-function hideError(id) { const el = document.getElementById(id); el.textContent = ''; el.style.display = 'none'; }
-
-let toastTimer;
-function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = `toast ${type} show`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-function copyToClipboard(text, label = 'Copied') {
-  navigator.clipboard.writeText(text).then(() => showToast(label, 'success')).catch(() => {
-    const el = document.createElement('textarea');
-    el.value = text; document.body.appendChild(el); el.select();
-    document.execCommand('copy'); document.body.removeChild(el);
-    showToast(label, 'success');
-  });
-}
-
-function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(str) { return String(str||'').replace(/'/g,"\\'"); }
-
-boot();
+  }
+})();
 </script>
 </body>
 </html>
