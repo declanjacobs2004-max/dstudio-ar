@@ -23,7 +23,6 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); min-height:100vh; }
 
-    /* LOGIN */
     #loginSection {
       display:flex; flex-direction:column; align-items:center;
       justify-content:center; min-height:100vh; padding:40px 20px;
@@ -38,7 +37,6 @@
     .login-box input:focus { border-color:var(--accent); }
     .error-msg { color:var(--danger); font-size:12px; text-align:center; margin-bottom:12px; display:none; letter-spacing:1px; }
 
-    /* BUTTONS */
     .btn-primary { width:100%; padding:15px; background:var(--accent); color:#080808; border:none; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:opacity 0.2s; }
     .btn-primary:hover { opacity:0.85; }
     .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
@@ -47,7 +45,6 @@
     .btn-danger { background:transparent; border:1px solid rgba(224,85,85,0.3); color:var(--danger); padding:7px 14px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
     .btn-danger:hover { background:var(--danger); color:white; }
 
-    /* DASHBOARD */
     #dashboard { display:none; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,8,8,0.96); backdrop-filter:blur(16px); z-index:100; }
     .topbar-left { display:flex; align-items:center; gap:14px; }
@@ -60,29 +57,25 @@
     .main { max-width:1100px; margin:0 auto; padding:28px 32px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
     @media(max-width:800px) { .main { grid-template-columns:1fr; padding:20px; } .topbar { padding:16px 20px; } }
 
-    /* STATS */
     .stats-row { grid-column:1/-1; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
     @media(max-width:600px) { .stats-row { grid-template-columns:1fr; } }
     .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px 26px; }
     .stat-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
     .stat-value { font-family:'Cormorant Garamond',serif; font-size:40px; font-weight:300; color:var(--accent); line-height:1; }
 
-    /* PANELS */
     .panel { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:28px; }
     .panel-title { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:var(--accent); margin-bottom:24px; display:flex; align-items:center; gap:12px; }
     .panel-title::after { content:''; flex:1; height:1px; background:var(--border); }
     .full-width { grid-column:1/-1; }
 
-    /* FORM */
     .form-group { margin-bottom:16px; }
     .form-group label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
-    .form-group input, .form-group textarea, .form-group select {
+    .form-group input, .form-group textarea {
       width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px;
       padding:12px 15px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:border-color 0.2s;
     }
-    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color:var(--accent); }
+    .form-group input:focus, .form-group textarea:focus { border-color:var(--accent); }
     .form-group textarea { height:75px; resize:none; }
-    .form-group select { appearance:none; cursor:pointer; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     @media(max-width:500px) { .form-row { grid-template-columns:1fr; } }
 
@@ -95,12 +88,10 @@
     .toggle input:checked + .toggle-slider { background:var(--accent); }
     .toggle input:checked + .toggle-slider:before { transform:translateX(20px); background:#080808; }
 
-    /* SUCCESS */
     .success-box { display:none; background:var(--accent-dim); border:1px solid var(--accent-border); border-radius:12px; padding:18px; margin-top:16px; }
     .success-box p { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
     .success-link { font-size:12px; color:var(--text); word-break:break-all; display:block; margin-bottom:10px; opacity:0.6; line-height:1.5; }
 
-    /* RESTAURANT LIST */
     .restaurant-item { border:1px solid var(--border); border-radius:14px; margin-bottom:12px; overflow:hidden; }
     .restaurant-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; cursor:pointer; transition:background 0.2s; gap:12px; }
     .restaurant-header:hover { background:var(--surface2); }
@@ -114,7 +105,6 @@
     .chevron { font-size:12px; color:var(--muted); transition:transform 0.2s; }
     .chevron.open { transform:rotate(180deg); }
 
-    /* DISHES */
     .dishes-section { display:none; border-top:1px solid var(--border); padding:20px; background:var(--surface2); }
     .dish-item { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); gap:12px; }
     .dish-item:last-of-type { border-bottom:none; }
@@ -124,14 +114,12 @@
     .dish-actions { display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
     .add-dish-btn { margin-top:16px; width:100%; }
 
-    /* DISH FORM */
     .dish-form { display:none; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-top:16px; }
     .dish-form .panel-title { margin-bottom:16px; }
 
     .empty-state { text-align:center; padding:32px 20px; color:var(--muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; }
     .loading-state { text-align:center; padding:24px; color:var(--muted); font-size:11px; letter-spacing:3px; text-transform:uppercase; }
 
-    /* TOAST */
     .toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--accent-border); border-radius:12px; padding:14px 20px; font-size:13px; color:var(--text); z-index:9999; transform:translateY(100px); opacity:0; transition:all 0.3s; max-width:320px; }
     .toast.show { transform:translateY(0); opacity:1; }
     .toast.error { border-color:rgba(224,85,85,0.4); }
@@ -168,8 +156,6 @@
   </div>
 
   <div class="main">
-
-    <!-- STATS -->
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-label">Active Clients</div>
@@ -223,7 +209,7 @@
       </div>
     </div>
 
-    <!-- HOW IT WORKS -->
+    <!-- WORKFLOW -->
     <div class="panel">
       <div class="panel-title">Workflow</div>
       <div style="display:flex;flex-direction:column;gap:0;">
@@ -240,7 +226,7 @@
         <div style="padding:14px 0;border-bottom:1px solid var(--border);">
           <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 03</div>
           <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Copy dish AR links</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Each dish gets a unique link. Take it to qr-code-generator.com to generate a QR code.</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Each dish gets a unique link. Use it to generate a QR code for the table.</div>
         </div>
         <div style="padding:14px 0;">
           <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 04</div>
@@ -255,7 +241,6 @@
       <div class="panel-title">All Restaurants</div>
       <div id="restaurantList"><div class="loading-state">Loading...</div></div>
     </div>
-
   </div>
 </div>
 
@@ -265,15 +250,19 @@
 <script>
 const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
-const EDGE_FN_URL = 'https://kynmckifaixaakpdarxn.supabase.co/functions/v1/create-client-user';
+const EDGE_FN_URL  = 'https://kynmckifaixaakpdarxn.supabase.co/functions/v1/create-client-user';
+
+// Only this user ID can access the dashboard — your admin account
+const ADMIN_USER_ID = 'd22ccb5f-c9d5-47c2-a128-f258468f0cdd';
 
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+});
 
 let currentSession = null;
 let lastRestLink = '';
 
-// ── TOAST ──
 function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -281,63 +270,87 @@ function showToast(msg, isError = false) {
   setTimeout(() => { t.className = 'toast' + (isError ? ' error' : ''); }, 3500);
 }
 
-// ── AUTH ──
+function showLoginScreen() {
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginSection').style.display = 'flex';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('errorMsg').style.display = 'none';
+  currentSession = null;
+}
+
+// ── LOGIN ──
 async function login() {
-  const email = document.getElementById('loginEmail').value.trim();
+  const email    = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
-  const btn = document.getElementById('loginBtn');
+  const btn      = document.getElementById('loginBtn');
+  const errEl    = document.getElementById('errorMsg');
+
+  errEl.style.display = 'none';
 
   if (!email || !password) {
-    document.getElementById('errorMsg').style.display = 'block';
-    document.getElementById('errorMsg').textContent = 'Please enter email and password.';
+    errEl.textContent = 'Please enter email and password.';
+    errEl.style.display = 'block';
     return;
   }
 
   btn.textContent = 'Signing in...';
   btn.disabled = true;
 
-  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  try {
+    const { data, error } = await db.auth.signInWithPassword({ email, password });
 
-  btn.textContent = 'Access Dashboard';
-  btn.disabled = false;
+    if (error || !data.session) {
+      errEl.textContent = 'Incorrect email or password.';
+      errEl.style.display = 'block';
+      return;
+    }
 
-  if (error || !data.session) {
-    document.getElementById('errorMsg').style.display = 'block';
-    document.getElementById('errorMsg').textContent = 'Incorrect email or password.';
-    return;
+    // Admin-only gate — reject any non-admin account immediately
+    if (data.session.user.id !== ADMIN_USER_ID) {
+      await db.auth.signOut();
+      errEl.textContent = 'Access denied.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    currentSession = data.session;
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadDashboard();
+
+  } catch (e) {
+    errEl.textContent = 'Unexpected error. Please try again.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = 'Access Dashboard';
+    btn.disabled = false;
   }
-
-  currentSession = data.session;
-  document.getElementById('loginSection').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  loadDashboard();
 }
 
 async function logout() {
   await db.auth.signOut();
-  currentSession = null;
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('loginSection').style.display = 'flex';
-  document.getElementById('loginEmail').value = '';
-  document.getElementById('loginPassword').value = '';
-  document.getElementById('errorMsg').style.display = 'none';
+  showLoginScreen();
 }
 
 // ── LOAD DASHBOARD ──
 async function loadDashboard() {
-  const { data, error } = await db.from('restaurants').select('*, dishes(count)').order('created_at', { ascending: false });
+  const { data, error } = await db
+    .from('restaurants')
+    .select('*, dishes(count)')
+    .order('created_at', { ascending: false });
 
   if (error) {
     document.getElementById('restaurantList').innerHTML = '<div class="empty-state">Error loading restaurants.</div>';
     return;
   }
 
-  const active = data.filter(r => r.is_active).length;
+  const active     = data.filter(r => r.is_active).length;
   const totalDishes = data.reduce((sum, r) => sum + (r.dishes?.[0]?.count || 0), 0);
 
-  document.getElementById('statActive').textContent = active;
-  document.getElementById('statMenus').textContent = totalDishes;
-  document.getElementById('statRevenue').textContent = 'R' + (active * 800).toLocaleString();
+  document.getElementById('statActive').textContent       = active;
+  document.getElementById('statMenus').textContent        = totalDishes;
+  document.getElementById('statRevenue').textContent      = 'R' + (active * 800).toLocaleString();
   document.getElementById('clientCountBadge').textContent = active;
 
   if (data.length === 0) {
@@ -397,11 +410,11 @@ async function loadDashboard() {
 
 // ── ADD RESTAURANT ──
 async function addRestaurant() {
-  const name = document.getElementById('newRestName').value.trim();
-  const slug = document.getElementById('newRestSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
-  const email = document.getElementById('newClientEmail').value.trim();
-  const password = document.getElementById('newClientPassword').value;
-  const isActive = document.getElementById('newRestActive').checked;
+  const name      = document.getElementById('newRestName').value.trim();
+  const slug      = document.getElementById('newRestSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
+  const email     = document.getElementById('newClientEmail').value.trim();
+  const password  = document.getElementById('newClientPassword').value;
+  const isActive  = document.getElementById('newRestActive').checked;
 
   if (!name || !slug || !email || !password) {
     showToast('Please fill in all required fields.', true);
@@ -413,10 +426,12 @@ async function addRestaurant() {
   btn.disabled = true;
 
   try {
-    // Create Supabase Auth user via Edge Function
     const res = await fetch(EDGE_FN_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession.access_token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentSession.access_token}`
+      },
       body: JSON.stringify({ email, password })
     });
 
@@ -424,25 +439,18 @@ async function addRestaurant() {
 
     if (!res.ok || result.error) {
       showToast('Error creating client account: ' + (result.error || 'Unknown error'), true);
-      btn.textContent = 'Add Restaurant';
-      btn.disabled = false;
       return;
     }
 
-    const authUserId = result.user_id;
-
-    // Insert restaurant
     const { error: restError } = await db.from('restaurants').insert([{
       name, slug, is_active: isActive,
       client_email: email,
-      auth_user_id: authUserId,
+      auth_user_id: result.user_id,
       user_id: currentSession.user.id
     }]);
 
     if (restError) {
       showToast('Error saving restaurant: ' + restError.message, true);
-      btn.textContent = 'Add Restaurant';
-      btn.disabled = false;
       return;
     }
 
@@ -450,9 +458,9 @@ async function addRestaurant() {
     document.getElementById('restSuccessMsg').textContent = lastRestLink;
     document.getElementById('restSuccessBox').style.display = 'block';
 
-    document.getElementById('newRestName').value = '';
-    document.getElementById('newRestSlug').value = '';
-    document.getElementById('newClientEmail').value = '';
+    document.getElementById('newRestName').value     = '';
+    document.getElementById('newRestSlug').value     = '';
+    document.getElementById('newClientEmail').value  = '';
     document.getElementById('newClientPassword').value = '';
     document.getElementById('newRestActive').checked = false;
 
@@ -461,36 +469,34 @@ async function addRestaurant() {
 
   } catch (e) {
     showToast('Unexpected error: ' + e.message, true);
+  } finally {
+    btn.textContent = 'Add Restaurant';
+    btn.disabled = false;
   }
-
-  btn.textContent = 'Add Restaurant';
-  btn.disabled = false;
 }
 
 // ── TOGGLE RESTAURANT ──
 function toggleRestaurant(id) {
   const section = document.getElementById(`dishes-${id}`);
   const chevron = document.getElementById(`chevron-${id}`);
-  const isOpen = section.style.display === 'block';
-
+  const isOpen  = section.style.display === 'block';
   section.style.display = isOpen ? 'none' : 'block';
   chevron.className = 'chevron' + (isOpen ? '' : ' open');
-
   if (!isOpen) loadDishes(id);
 }
 
 // ── LOAD DISHES ──
 async function loadDishes(restaurantId) {
-  const { data, error } = await db.from('dishes').select('*').eq('restaurant_id', restaurantId).order('created_at', { ascending: true });
+  const { data, error } = await db
+    .from('dishes')
+    .select('*')
+    .eq('restaurant_id', restaurantId)
+    .order('created_at', { ascending: true });
 
   const container = document.getElementById(`dish-list-${restaurantId}`);
 
   if (error) { container.innerHTML = '<div class="empty-state">Error loading dishes.</div>'; return; }
-
-  if (!data || data.length === 0) {
-    container.innerHTML = '<div class="empty-state">No dishes yet — add one below.</div>';
-    return;
-  }
+  if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">No dishes yet — add one below.</div>'; return; }
 
   container.innerHTML = data.map(d => `
     <div class="dish-item" id="dish-item-${d.id}">
@@ -499,7 +505,7 @@ async function loadDishes(restaurantId) {
         <div class="dish-price-display">${d.dish_price}</div>
       </div>
       <div class="dish-actions">
-        <button class="btn-secondary" onclick="copyDishLink('${d.slug}', '${restaurantId}')">Copy AR Link</button>
+        <button class="btn-secondary" onclick="copyDishLink('${d.slug}')">Copy AR Link</button>
         <button class="btn-danger" onclick="deleteDish('${d.id}', '${restaurantId}')">Delete</button>
       </div>
     </div>
@@ -516,9 +522,9 @@ function toggleDishForm(restaurantId) {
 async function addDish(restaurantId) {
   const dishName = document.getElementById(`dname-${restaurantId}`).value.trim();
   const dishPrice = document.getElementById(`dprice-${restaurantId}`).value.trim();
-  const dishDesc = document.getElementById(`ddesc-${restaurantId}`).value.trim();
-  const modelUrl = document.getElementById(`dglb-${restaurantId}`).value.trim();
-  const usdzUrl = document.getElementById(`dusdz-${restaurantId}`).value.trim();
+  const dishDesc  = document.getElementById(`ddesc-${restaurantId}`).value.trim();
+  const modelUrl  = document.getElementById(`dglb-${restaurantId}`).value.trim();
+  const usdzUrl   = document.getElementById(`dusdz-${restaurantId}`).value.trim();
 
   if (!dishName || !dishPrice || !modelUrl || !usdzUrl) {
     showToast('Please fill in all required dish fields.', true);
@@ -539,11 +545,11 @@ async function addDish(restaurantId) {
 
   if (error) { showToast('Error saving dish: ' + error.message, true); return; }
 
-  document.getElementById(`dname-${restaurantId}`).value = '';
+  document.getElementById(`dname-${restaurantId}`).value  = '';
   document.getElementById(`dprice-${restaurantId}`).value = '';
-  document.getElementById(`ddesc-${restaurantId}`).value = '';
-  document.getElementById(`dglb-${restaurantId}`).value = '';
-  document.getElementById(`dusdz-${restaurantId}`).value = '';
+  document.getElementById(`ddesc-${restaurantId}`).value  = '';
+  document.getElementById(`dglb-${restaurantId}`).value   = '';
+  document.getElementById(`dusdz-${restaurantId}`).value  = '';
 
   toggleDishForm(restaurantId);
   loadDishes(restaurantId);
@@ -554,11 +560,8 @@ async function addDish(restaurantId) {
 // ── DELETE DISH ──
 async function deleteDish(dishId, restaurantId) {
   if (!confirm('Delete this dish? This cannot be undone.')) return;
-
   const { error } = await db.from('dishes').delete().eq('id', dishId);
-
   if (error) { showToast('Error deleting dish: ' + error.message, true); return; }
-
   loadDishes(restaurantId);
   loadDashboard();
   showToast('Dish deleted.');
@@ -566,32 +569,39 @@ async function deleteDish(dishId, restaurantId) {
 
 // ── COPY LINKS ──
 function copyMenuLink(slug) {
-  const link = `https://dstudio-ar.vercel.app/menu.html?restaurant=${slug}`;
-  navigator.clipboard.writeText(link).then(() => showToast('Menu link copied!'));
+  navigator.clipboard.writeText(`https://dstudio-ar.vercel.app/menu.html?restaurant=${slug}`)
+    .then(() => showToast('Menu link copied!'));
 }
 
 function copyRestLink() {
   navigator.clipboard.writeText(lastRestLink).then(() => showToast('Menu link copied!'));
 }
 
-function copyDishLink(dishSlug, restaurantId) {
-  const link = `https://dstudio-ar.vercel.app/dish.html?slug=${dishSlug}`;
-  navigator.clipboard.writeText(link).then(() => showToast('AR dish link copied!'));
+function copyDishLink(dishSlug) {
+  navigator.clipboard.writeText(`https://dstudio-ar.vercel.app/dish.html?slug=${dishSlug}`)
+    .then(() => showToast('AR dish link copied!'));
 }
 
-// ── ENTER KEY ON LOGIN ──
+// ── ENTER KEY ──
 document.addEventListener('keypress', function(e) {
   if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') login();
 });
 
-// ── CHECK SESSION ON LOAD ──
+// ── INIT — check existing session ──
 (async () => {
-  const { data } = await db.auth.getSession();
-  if (data.session) {
-    currentSession = data.session;
-    document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    loadDashboard();
+  try {
+    const { data } = await db.auth.getSession();
+    if (data.session && data.session.user.id === ADMIN_USER_ID) {
+      currentSession = data.session;
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadDashboard();
+    } else if (data.session) {
+      // Someone else's session — sign them out silently
+      await db.auth.signOut();
+    }
+  } catch {
+    // No session — stay on login
   }
 })();
 </script>
