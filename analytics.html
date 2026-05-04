@@ -122,7 +122,6 @@
       <button class="btn-secondary" onclick="logout()">Logout</button>
     </div>
   </div>
-
   <div class="main">
     <div id="analyticsContent"><div class="loading-state">Loading analytics...</div></div>
   </div>
@@ -133,13 +132,29 @@ const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
 
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false
+  }
+});
 
 let currentRestaurant = null;
 let chartInstances = {};
 
 function getRestaurantSlug() {
   return new URLSearchParams(window.location.search).get('restaurant');
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('errorMsg').style.display = 'none';
 }
 
 // ── LOAD RESTAURANT NAME FOR LOGIN SCREEN ──
@@ -149,8 +164,41 @@ async function loadRestaurantName() {
     document.getElementById('loginRestName').textContent = 'Invalid link';
     return;
   }
-  const { data } = await db.from('restaurants').select('name').eq('slug', slug).single();
-  document.getElementById('loginRestName').textContent = data ? data.name : 'Restaurant not found';
+  try {
+    const { data } = await db.from('restaurants').select('name').eq('slug', slug).single();
+    document.getElementById('loginRestName').textContent = data ? data.name : 'Restaurant not found';
+  } catch {
+    document.getElementById('loginRestName').textContent = '';
+  }
+}
+
+// ── FETCH AND VERIFY RESTAURANT ──
+// Uses anon client — no auth context needed — just matches auth_user_id in JS
+async function fetchAndVerifyRestaurant(userId) {
+  const slug = getRestaurantSlug();
+  if (!slug) return null;
+
+  // Use a fresh anon fetch — no RLS user context required since policy is public read
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/restaurants?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`,
+    {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (!response.ok) return null;
+  const rows = await response.json();
+  if (!rows || rows.length === 0) return null;
+
+  const restaurant = rows[0];
+
+  // Verify ownership purely in JavaScript — no RLS involved
+  if (restaurant.auth_user_id !== userId) return null;
+
+  return restaurant;
 }
 
 // ── LOGIN ──
@@ -159,51 +207,45 @@ async function login() {
   const password = document.getElementById('loginPassword').value;
   const btn = document.getElementById('loginBtn');
 
+  hideError();
+
   if (!email || !password) {
-    document.getElementById('errorMsg').style.display = 'block';
-    document.getElementById('errorMsg').textContent = 'Please enter email and password.';
+    showError('Please enter email and password.');
     return;
   }
 
   btn.textContent = 'Signing in...';
   btn.disabled = true;
 
-  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  try {
+    // Sign in
+    const { data: authData, error: authError } = await db.auth.signInWithPassword({ email, password });
 
-  btn.textContent = 'View Analytics';
-  btn.disabled = false;
+    if (authError || !authData.session) {
+      showError('Incorrect email or password.');
+      return;
+    }
 
-  if (error || !data.session) {
-    document.getElementById('errorMsg').style.display = 'block';
-    document.getElementById('errorMsg').textContent = 'Incorrect email or password.';
-    return;
+    const userId = authData.session.user.id;
+
+    // Fetch restaurant via direct REST call — bypasses any RLS session timing issues
+    const restaurant = await fetchAndVerifyRestaurant(userId);
+
+    if (!restaurant) {
+      showError('Access denied for this restaurant.');
+      await db.auth.signOut();
+      return;
+    }
+
+    currentRestaurant = restaurant;
+    showAnalytics();
+
+  } catch (e) {
+    showError('Something went wrong. Please try again.');
+  } finally {
+    btn.textContent = 'View Analytics';
+    btn.disabled = false;
   }
-
-  // Fetch restaurant by slug then verify ownership in code
-  const slug = getRestaurantSlug();
-  const { data: restData, error: restError } = await db
-    .from('restaurants')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-
-  if (restError || !restData) {
-    document.getElementById('errorMsg').style.display = 'block';
-    document.getElementById('errorMsg').textContent = 'Restaurant not found.';
-    await db.auth.signOut();
-    return;
-  }
-
-  // Verify ownership in code
-  if (restData.auth_user_id !== data.session.user.id) {
-    document.getElementById('errorMsg').style.display = 'block';
-    document.getElementById('errorMsg').textContent = 'Access denied for this restaurant.';
-    await db.auth.signOut();
-    return;
-  }
-
-  currentRestaurant = restData;
-  showAnalytics();
 }
 
 async function logout() {
@@ -213,7 +255,7 @@ async function logout() {
   document.getElementById('loginSection').style.display = 'flex';
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
-  document.getElementById('errorMsg').style.display = 'none';
+  hideError();
 }
 
 function showAnalytics() {
@@ -225,7 +267,6 @@ function showAnalytics() {
 
 async function refreshData() {
   document.getElementById('analyticsContent').innerHTML = '<div class="loading-state">Refreshing...</div>';
-  // Destroy existing charts
   Object.values(chartInstances).forEach(c => c.destroy());
   chartInstances = {};
   loadAnalytics();
@@ -239,7 +280,6 @@ async function loadAnalytics() {
     const lastWeekStart = new Date(now); lastWeekStart.setDate(now.getDate() - 14); lastWeekStart.setHours(0,0,0,0);
     const monthStart = new Date(now); monthStart.setDate(now.getDate() - 28); monthStart.setHours(0,0,0,0);
 
-    // Fetch all views for this restaurant in last 28 days
     const { data: allViews, error: viewsError } = await db
       .from('dish_views')
       .select('*, dishes(dish_name)')
@@ -249,7 +289,6 @@ async function loadAnalytics() {
 
     if (viewsError) throw new Error(viewsError.message);
 
-    // Fetch all dishes for this restaurant
     const { data: dishes, error: dishesError } = await db
       .from('dishes')
       .select('*')
@@ -257,19 +296,20 @@ async function loadAnalytics() {
 
     if (dishesError) throw new Error(dishesError.message);
 
-    const thisWeekViews = allViews.filter(v => new Date(v.viewed_at) >= weekStart);
-    const lastWeekViews = allViews.filter(v => new Date(v.viewed_at) >= lastWeekStart && new Date(v.viewed_at) < weekStart);
+    const views = allViews || [];
+    const thisWeekViews = views.filter(v => new Date(v.viewed_at) >= weekStart);
+    const lastWeekViews = views.filter(v => new Date(v.viewed_at) >= lastWeekStart && new Date(v.viewed_at) < weekStart);
 
     const thisWeekCount = thisWeekViews.length;
     const lastWeekCount = lastWeekViews.length;
-    const weekChange = lastWeekCount === 0 ? (thisWeekCount > 0 ? 100 : 0) : Math.round(((thisWeekCount - lastWeekCount) / lastWeekCount) * 100);
+    const weekChange = lastWeekCount === 0
+      ? (thisWeekCount > 0 ? 100 : 0)
+      : Math.round(((thisWeekCount - lastWeekCount) / lastWeekCount) * 100);
 
-    // Device split
     const iosViews = thisWeekViews.filter(v => v.device_type === 'ios').length;
     const androidViews = thisWeekViews.filter(v => v.device_type === 'android').length;
     const iosPct = thisWeekCount > 0 ? Math.round((iosViews / thisWeekCount) * 100) : 0;
 
-    // Dish view counts this week
     const dishCounts = {};
     thisWeekViews.forEach(v => {
       const name = v.dishes?.dish_name || 'Unknown';
@@ -279,24 +319,20 @@ async function loadAnalytics() {
     const topDish = sortedDishes[0]?.[0] || '—';
     const bottomDish = sortedDishes[sortedDishes.length - 1]?.[0] || '—';
 
-    // Daily views for trend chart (last 28 days)
     const dailyMap = {};
     for (let i = 27; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(now.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      dailyMap[key] = 0;
+      dailyMap[d.toISOString().split('T')[0]] = 0;
     }
-    allViews.forEach(v => {
+    views.forEach(v => {
       const key = v.viewed_at.split('T')[0];
       if (dailyMap[key] !== undefined) dailyMap[key]++;
     });
 
-    // Hourly views this week
     const hourlyMap = Array(24).fill(0);
     thisWeekViews.forEach(v => {
-      const h = new Date(v.viewed_at).getHours();
-      hourlyMap[h]++;
+      hourlyMap[new Date(v.viewed_at).getHours()]++;
     });
 
     renderAnalytics({
@@ -304,11 +340,12 @@ async function loadAnalytics() {
       iosPct, androidPct: 100 - iosPct, iosViews, androidViews,
       topDish, bottomDish,
       sortedDishes, dailyMap, hourlyMap,
-      totalDishes: dishes.length
+      totalDishes: (dishes || []).length
     });
 
   } catch (e) {
-    document.getElementById('analyticsContent').innerHTML = `<div class="empty-state">Error loading analytics: ${e.message}</div>`;
+    document.getElementById('analyticsContent').innerHTML =
+      `<div class="empty-state">Error loading analytics: ${e.message}</div>`;
   }
 }
 
@@ -316,7 +353,7 @@ function renderAnalytics(d) {
   const changeClass = d.weekChange >= 0 ? 'stat-up' : 'stat-down';
   const changeStr = (d.weekChange >= 0 ? '+' : '') + d.weekChange + '%';
 
-  const html = `
+  document.getElementById('analyticsContent').innerHTML = `
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Views This Week</div>
@@ -369,8 +406,7 @@ function renderAnalytics(d) {
           ${d.sortedDishes.length === 0
             ? '<div class="empty-state">No views this week yet.</div>'
             : d.sortedDishes.map((item, i) => {
-                const maxCount = d.sortedDishes[0][1];
-                const pct = maxCount > 0 ? Math.round((item[1] / maxCount) * 100) : 0;
+                const pct = d.sortedDishes[0][1] > 0 ? Math.round((item[1] / d.sortedDishes[0][1]) * 100) : 0;
                 return `
                   <div class="dish-row">
                     <div class="dish-rank">${i + 1}</div>
@@ -379,8 +415,7 @@ function renderAnalytics(d) {
                       <div class="dish-row-bar-wrap"><div class="dish-row-bar" style="width:${pct}%"></div></div>
                     </div>
                     <div class="dish-row-count">${item[1]} view${item[1] !== 1 ? 's' : ''}</div>
-                  </div>
-                `;
+                  </div>`;
               }).join('')
           }
         </div>
@@ -388,21 +423,17 @@ function renderAnalytics(d) {
     </div>
   `;
 
-  document.getElementById('analyticsContent').innerHTML = html;
-
   const chartDefaults = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: { legend: { display: false } }
   };
-
   const gridColor = '#1e1e1e';
   const tickColor = '#555';
 
-  // Trend chart
   const trendLabels = Object.keys(d.dailyMap).map(k => {
-    const parts = k.split('-');
-    return `${parts[2]}/${parts[1]}`;
+    const p = k.split('-');
+    return `${p[2]}/${p[1]}`;
   });
 
   chartInstances.trend = new Chart(document.getElementById('trendChart'), {
@@ -416,7 +447,7 @@ function renderAnalytics(d) {
         borderWidth: 2,
         pointRadius: 0,
         fill: true,
-        tension: 0.4,
+        tension: 0.4
       }]
     },
     options: {
@@ -428,7 +459,6 @@ function renderAnalytics(d) {
     }
   });
 
-  // Hourly chart
   chartInstances.hourly = new Chart(document.getElementById('hourlyChart'), {
     type: 'bar',
     data: {
@@ -436,7 +466,7 @@ function renderAnalytics(d) {
       datasets: [{
         data: d.hourlyMap,
         backgroundColor: 'rgba(200,169,110,0.6)',
-        borderRadius: 4,
+        borderRadius: 4
       }]
     },
     options: {
@@ -448,7 +478,6 @@ function renderAnalytics(d) {
     }
   });
 
-  // Device doughnut
   chartInstances.device = new Chart(document.getElementById('deviceChart'), {
     type: 'doughnut',
     data: {
@@ -457,7 +486,7 @@ function renderAnalytics(d) {
         data: [d.iosViews, d.androidViews],
         backgroundColor: ['#c8a96e', '#3a3020'],
         borderColor: '#080808',
-        borderWidth: 3,
+        borderWidth: 3
       }]
     },
     options: {
@@ -469,7 +498,7 @@ function renderAnalytics(d) {
           labels: { color: '#555', font: { size: 11 }, padding: 16, boxWidth: 12 }
         }
       },
-      cutout: '65%',
+      cutout: '65%'
     }
   });
 }
@@ -479,24 +508,22 @@ document.addEventListener('keypress', function(e) {
   if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') login();
 });
 
-// ── INIT ──
+// ── INIT — check existing session on page load ──
 (async () => {
   await loadRestaurantName();
 
-  // Check if already logged in
-  const { data } = await db.auth.getSession();
-  if (data.session) {
-    const slug = getRestaurantSlug();
-    const { data: restData } = await db
-      .from('restaurants')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-
-    if (restData && restData.auth_user_id === data.session.user.id) {
-      currentRestaurant = restData;
-      showAnalytics();
+  try {
+    const { data: sessionData } = await db.auth.getSession();
+    if (sessionData?.session) {
+      const userId = sessionData.session.user.id;
+      const restaurant = await fetchAndVerifyRestaurant(userId);
+      if (restaurant) {
+        currentRestaurant = restaurant;
+        showAnalytics();
+      }
     }
+  } catch {
+    // No valid session — stay on login screen
   }
 })();
 </script>
