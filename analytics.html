@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Analytics — D'Studio AR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --gold: #c8a96e;
+    --gold-dim: rgba(200,169,110,0.10);
+    --gold-mid: rgba(200,169,110,0.22);
+    --bg: #080808;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: rgba(200,169,110,0.14);
+    --text: #e8e4dc;
+    --muted: rgba(232,228,220,0.45);
+    --success: #27ae60;
+    --radius: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+
+  /* ── LOGIN ──────────────────────────────── */
+  #login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.06) 0%, transparent 60%);
+  }
+  .login-box {
+    width: 100%; max-width: 360px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 40px 32px; text-align: center;
+  }
+  .login-box img { width: 100px; margin-bottom: 28px; }
+  .login-box h2 {
+    font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 300;
+    color: var(--gold); margin-bottom: 4px;
+  }
+  .login-restaurant { color: var(--text); font-size: 16px; margin-bottom: 4px; }
+  .login-sub { color: var(--muted); font-size: 12px; margin-bottom: 28px; }
+  .login-input {
+    width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; margin-bottom: 10px; transition: border-color 0.2s;
+  }
+  .login-input:focus { outline: none; border-color: var(--gold); }
+  .login-error { color: #e74c3c; font-size: 12px; margin-bottom: 10px; display: none; }
+  .login-btn {
+    width: 100%; padding: 13px; background: var(--gold); border: none; border-radius: 8px;
+    color: #080808; font-family: 'DM Sans', sans-serif; font-weight: 600;
+    font-size: 14px; cursor: pointer; transition: opacity 0.2s;
+  }
+  .login-btn:hover { opacity: 0.85; }
+  .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── LOADING/ERROR ──────────────────────── */
+  #loading-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px;
+  }
+  .spinner {
+    width: 32px; height: 32px; border: 2px solid rgba(200,169,110,0.15);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #error-screen {
+    display: none; min-height: 100vh; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px; text-align: center; padding: 40px 24px;
+  }
+  #error-screen h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); }
+  #error-screen p { color: var(--muted); font-size: 14px; }
+
+  /* ── DASHBOARD SHELL ────────────────────── */
+  #analytics { display: none; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 20px; height: 58px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar-brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .topbar-brand img { height: 24px; }
+  .topbar-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 16px; color: var(--gold);
+  }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+  .btn-logout {
+    padding: 6px 14px; background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-logout:hover { border-color: var(--gold); color: var(--gold); }
+
+  .main { max-width: 720px; margin: 0 auto; padding: 28px 16px 60px; }
+
+  /* ── PAGE HEADER ────────────────────────── */
+  .page-header { margin-bottom: 28px; }
+  .page-header h1 {
+    font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 300;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .page-header .sub { color: var(--muted); font-size: 13px; }
+
+  /* ── STAT CARDS ─────────────────────────── */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 18px; position: relative; overflow: hidden;
+  }
+  .stat-card::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .stat-card.full { grid-column: 1 / -1; }
+  .stat-value {
+    font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 300;
+    color: var(--gold); line-height: 1;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+  .stat-sub { font-size: 12px; color: var(--text); margin-top: 8px; }
+  .stat-delta { font-size: 11px; margin-top: 4px; }
+  .stat-delta.up { color: var(--success); }
+  .stat-delta.down { color: #e74c3c; }
+  .stat-delta.neutral { color: var(--muted); }
+
+  /* ── SECTION ────────────────────────────── */
+  .section { margin-bottom: 24px; }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400;
+    color: var(--gold); margin-bottom: 14px;
+  }
+
+  /* ── CHART CARD ─────────────────────────── */
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 12px;
+  }
+  .chart-card canvas { max-height: 200px; }
+
+  /* ── DISH RANKING ───────────────────────── */
+  .dish-rank-row {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .rank-num {
+    font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--gold);
+    opacity: 0.5; width: 24px; text-align: center; flex-shrink: 0;
+  }
+  .rank-bar-wrap { flex: 1; }
+  .rank-name { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .rank-bar-track { background: rgba(200,169,110,0.08); border-radius: 3px; height: 5px; overflow: hidden; }
+  .rank-bar-fill { background: var(--gold); height: 5px; border-radius: 3px; transition: width 1s ease; }
+  .rank-views { font-size: 15px; color: var(--gold); font-weight: 500; flex-shrink: 0; }
+
+  /* ── DEVICE SPLIT ───────────────────────── */
+  .device-split {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; display: flex; align-items: center; gap: 20px;
+  }
+  .device-donut { flex-shrink: 0; }
+  .device-legend { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .device-item { display: flex; align-items: center; gap: 8px; }
+  .device-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .device-name { font-size: 13px; color: var(--text); }
+  .device-pct { font-size: 13px; color: var(--gold); margin-left: auto; font-weight: 500; }
+
+  /* ── EMPTY STATE ────────────────────────── */
+  .empty-section { color: var(--muted); font-size: 13px; padding: 16px 0; }
+
+  /* ── REFRESH ─────────────────────────────── */
+  .refresh-bar {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+  }
+  .last-updated { font-size: 11px; color: var(--muted); }
+  .btn-refresh {
+    padding: 6px 14px; background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-refresh:hover { border-color: var(--gold); color: var(--gold); }
+
+  @media (max-width: 400px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .device-split { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── PRE-LOGIN LOADING ────────────────────────────────── -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div style="color:var(--muted);font-size:13px;">Loading…</div>
+</div>
+
+<!-- ── ERROR ─────────────────────────────────────────────── -->
+<div id="error-screen">
+  <h2>Restaurant not found</h2>
+  <p>Check the URL and try again.</p>
+</div>
+
+<!-- ── LOGIN ─────────────────────────────────────────────── -->
+<div id="login-screen" style="display:none;">
+  <div class="login-box">
+    <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none';document.getElementById('login-logo-text').style.display='block'" />
+    <div id="login-logo-text" style="display:none;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:28px;">D'Studio AR</div>
+    <h2>Analytics</h2>
+    <div class="login-restaurant" id="login-restaurant-name"></div>
+    <div class="login-sub">Enter your password to view your data</div>
+    <div class="login-error" id="login-error">Incorrect password.</div>
+    <input type="password" class="login-input" id="login-pw" placeholder="Password" autocomplete="current-password" />
+    <button class="login-btn" onclick="doLogin()">View My Analytics</button>
+  </div>
+</div>
+
+<!-- ── ANALYTICS DASHBOARD ───────────────────────────────── -->
+<div id="analytics">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none'" />
+      <span class="topbar-title" id="topbar-name"></span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-logout" onclick="doLogout()">Log Out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <h1>Your AR Performance</h1>
+      <div class="sub">Live insight into how customers engage with your AR menu</div>
+    </div>
+
+    <div class="refresh-bar">
+      <div class="last-updated" id="last-updated">—</div>
+      <button class="btn-refresh" onclick="loadAnalytics()">↻ Refresh</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="spinner" style="margin:0;width:20px;height:20px;"></div></div>
+    </div>
+
+    <!-- Weekly Trend Chart -->
+    <div class="section">
+      <div class="section-title">Weekly Trend — Last 4 Weeks</div>
+      <div class="chart-card">
+        <canvas id="chart-weekly"></canvas>
+      </div>
+    </div>
+
+    <!-- Peak Hours Chart -->
+    <div class="section">
+      <div class="section-title">Peak Viewing Hours</div>
+      <div class="chart-card">
+        <canvas id="chart-hours"></canvas>
+      </div>
+    </div>
+
+    <!-- Dish Rankings -->
+    <div class="section">
+      <div class="section-title">Dish Popularity Ranking</div>
+      <div id="dish-rankings">
+        <div class="empty-section">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Device Split -->
+    <div class="section">
+      <div class="section-title">Device Split</div>
+      <div class="device-split" id="device-split">
+        <div class="empty-section">Loading…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentRestaurant = null;
+let weeklyChart = null;
+let hoursChart = null;
+
+const params = new URLSearchParams(window.location.search);
+const restaurantSlug = params.get('restaurant');
+
+async function boot() {
+  if (!restaurantSlug) return showScreen('error');
+
+  try {
+    const { data: restaurant, error } = await db
+      .from('restaurants')
+      .select('id, name, slug, client_password')
+      .eq('slug', restaurantSlug)
+      .single();
+
+    if (error || !restaurant) return showScreen('error');
+
+    currentRestaurant = restaurant;
+    document.getElementById('login-restaurant-name').textContent = restaurant.name;
+    document.title = `${restaurant.name} — Analytics`;
+
+    // Check session
+    const key = `dstudio_analytics_${restaurant.slug}`;
+    if (sessionStorage.getItem(key) === '1') {
+      showDashboard();
+    } else {
+      showScreen('login');
+    }
+  } catch (e) {
+    showScreen('error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  boot();
+});
+
+function doLogin() {
+  const pw = document.getElementById('login-pw').value.trim();
+  const err = document.getElementById('login-error');
+  if (pw === currentRestaurant.client_password) {
+    sessionStorage.setItem(`dstudio_analytics_${currentRestaurant.slug}`, '1');
+    err.style.display = 'none';
+    showDashboard();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('login-pw').value = '';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem(`dstudio_analytics_${currentRestaurant.slug}`);
+  showScreen('login');
+  document.getElementById('login-pw').value = '';
+}
+
+function showScreen(name) {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('error-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('analytics').style.display = 'none';
+
+  if (name === 'error') {
+    document.getElementById('error-screen').style.display = 'flex';
+  } else if (name === 'login') {
+    document.getElementById('login-screen').style.display = 'flex';
+  } else if (name === 'analytics') {
+    document.getElementById('analytics').style.display = 'block';
+  }
+}
+
+async function showDashboard() {
+  document.getElementById('topbar-name').textContent = currentRestaurant.name;
+  showScreen('analytics');
+  await loadAnalytics();
+}
+
+async function loadAnalytics() {
+  if (!currentRestaurant) return;
+
+  document.getElementById('last-updated').textContent = 'Updating…';
+
+  try {
+    // Fetch all views for this restaurant
+    const { data: views, error: vErr } = await db
+      .from('dish_views')
+      .select('*')
+      .eq('restaurant_id', currentRestaurant.id)
+      .order('viewed_at', { ascending: true });
+
+    if (vErr) throw vErr;
+
+    // Fetch all dishes for this restaurant
+    const { data: dishes, error: dErr } = await db
+      .from('dishes')
+      .select('id, dish_name')
+      .eq('restaurant_id', currentRestaurant.id);
+
+    if (dErr) throw dErr;
+
+    const dishMap = {};
+    (dishes || []).forEach(d => { dishMap[d.id] = d.dish_name; });
+
+    const now = new Date();
+    const msPerDay = 86400000;
+    const startOfThisWeek = new Date(now - (now.getDay() * msPerDay));
+    startOfThisWeek.setHours(0,0,0,0);
+    const startOfLastWeek = new Date(startOfThisWeek - 7 * msPerDay);
+
+    const thisWeekViews = (views || []).filter(v => new Date(v.viewed_at) >= startOfThisWeek);
+    const lastWeekViews = (views || []).filter(v => {
+      const d = new Date(v.viewed_at);
+      return d >= startOfLastWeek && d < startOfThisWeek;
+    });
+
+    // Most & least viewed dish this week
+    const dishCountsThisWeek = {};
+    thisWeekViews.forEach(v => {
+      dishCountsThisWeek[v.dish_id] = (dishCountsThisWeek[v.dish_id] || 0) + 1;
+    });
+    const sortedDishes = Object.entries(dishCountsThisWeek).sort((a,b) => b[1]-a[1]);
+    const topDish = sortedDishes[0] ? dishMap[sortedDishes[0][0]] || 'Unknown' : '—';
+    const bottomDish = sortedDishes.length > 1
+      ? dishMap[sortedDishes[sortedDishes.length-1][0]] || 'Unknown'
+      : (sortedDishes.length === 1 ? '—' : '—');
+
+    // Delta
+    const delta = thisWeekViews.length - lastWeekViews.length;
+    const deltaText = delta > 0 ? `▲ ${delta} vs last week` : delta < 0 ? `▼ ${Math.abs(delta)} vs last week` : 'Same as last week';
+    const deltaClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
+
+    // Total all time
+    const totalViews = (views || []).length;
+
+    // Render stat cards
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-value">${thisWeekViews.length}</div>
+        <div class="stat-label">Views This Week</div>
+        <div class="stat-delta ${deltaClass}">${deltaText}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalViews}</div>
+        <div class="stat-label">Total All-Time Views</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="font-size:20px;padding-top:4px;">${topDish}</div>
+        <div class="stat-label">Most Viewed Dish This Week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="font-size:20px;padding-top:4px;">${bottomDish}</div>
+        <div class="stat-label">Least Viewed Dish This Week</div>
+      </div>
+    `;
+
+    // ── WEEKLY TREND CHART ─────────────────────────────
+    const weeklyData = buildWeeklyData(views || []);
+    renderWeeklyChart(weeklyData);
+
+    // ── PEAK HOURS CHART ───────────────────────────────
+    const hoursData = buildHoursData(views || []);
+    renderHoursChart(hoursData);
+
+    // ── DISH RANKINGS ──────────────────────────────────
+    renderDishRankings(views || [], dishes || [], dishMap);
+
+    // ── DEVICE SPLIT ───────────────────────────────────
+    renderDeviceSplit(views || []);
+
+    document.getElementById('last-updated').textContent = `Updated ${formatTime(new Date())}`;
+  } catch (e) {
+    document.getElementById('last-updated').textContent = 'Failed to load data';
+  }
+}
+
+// ── DATA BUILDERS ────────────────────────────────────────
+function buildWeeklyData(views) {
+  const weeks = [];
+  const labels = [];
+  const now = new Date();
+  for (let i = 3; i >= 0; i--) {
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay() - i * 7);
+    weekStart.setHours(0,0,0,0);
+    const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+    const count = views.filter(v => {
+      const d = new Date(v.viewed_at);
+      return d >= weekStart && d < weekEnd;
+    }).length;
+    weeks.push(count);
+    labels.push(i === 0 ? 'This week' : i === 1 ? 'Last week' : `${i} wks ago`);
+  }
+  return { labels, data: weeks };
+}
+
+function buildHoursData(views) {
+  const counts = new Array(24).fill(0);
+  views.forEach(v => {
+    const h = new Date(v.viewed_at).getHours();
+    counts[h]++;
+  });
+  const labels = counts.map((_, i) => {
+    if (i === 0) return '12am';
+    if (i === 12) return '12pm';
+    return i < 12 ? `${i}am` : `${i-12}pm`;
+  });
+  return { labels, data: counts };
+}
+
+// ── CHART RENDERERS ──────────────────────────────────────
+const CHART_DEFAULTS = {
+  color: '#c8a96e',
+  gridColor: 'rgba(200,169,110,0.08)',
+  tickColor: 'rgba(232,228,220,0.35)',
+  font: 'DM Sans'
+};
+
+function renderWeeklyChart(weeklyData) {
+  const ctx = document.getElementById('chart-weekly').getContext('2d');
+  if (weeklyChart) weeklyChart.destroy();
+  weeklyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: weeklyData.labels,
+      datasets: [{
+        label: 'Views',
+        data: weeklyData.data,
+        backgroundColor: 'rgba(200,169,110,0.25)',
+        borderColor: '#c8a96e',
+        borderWidth: 1.5,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          grid: { color: CHART_DEFAULTS.gridColor },
+          ticks: { color: CHART_DEFAULTS.tickColor, font: { family: CHART_DEFAULTS.font, size: 11 } }
+        },
+        y: {
+          grid: { color: CHART_DEFAULTS.gridColor },
+          ticks: { color: CHART_DEFAULTS.tickColor, font: { family: CHART_DEFAULTS.font, size: 11 }, stepSize: 1 },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+function renderHoursChart(hoursData) {
+  const ctx = document.getElementById('chart-hours').getContext('2d');
+  if (hoursChart) hoursChart.destroy();
+  hoursChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: hoursData.labels,
+      datasets: [{
+        label: 'Views',
+        data: hoursData.data,
+        borderColor: '#c8a96e',
+        backgroundColor: 'rgba(200,169,110,0.08)',
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          grid: { color: CHART_DEFAULTS.gridColor },
+          ticks: {
+            color: CHART_DEFAULTS.tickColor,
+            font: { family: CHART_DEFAULTS.font, size: 10 },
+            maxTicksLimit: 8
+          }
+        },
+        y: {
+          grid: { color: CHART_DEFAULTS.gridColor },
+          ticks: { color: CHART_DEFAULTS.tickColor, font: { family: CHART_DEFAULTS.font, size: 11 }, stepSize: 1 },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+function renderDishRankings(views, dishes, dishMap) {
+  const container = document.getElementById('dish-rankings');
+  if (!dishes.length) {
+    container.innerHTML = '<div class="empty-section">No dishes added yet.</div>';
+    return;
+  }
+
+  const dishCounts = {};
+  dishes.forEach(d => { dishCounts[d.id] = 0; });
+  views.forEach(v => {
+    if (dishCounts[v.dish_id] !== undefined) dishCounts[v.dish_id]++;
+  });
+
+  const sorted = Object.entries(dishCounts).sort((a,b) => b[1]-a[1]);
+  const max = sorted[0] ? sorted[0][1] : 1;
+
+  container.innerHTML = sorted.map(([id, count], i) => {
+    const pct = max > 0 ? Math.round((count / max) * 100) : 0;
+    return `
+      <div class="dish-rank-row">
+        <div class="rank-num">${i + 1}</div>
+        <div class="rank-bar-wrap">
+          <div class="rank-name">${escHtml(dishMap[id] || 'Unknown dish')}</div>
+          <div class="rank-bar-track">
+            <div class="rank-bar-fill" style="width:${pct}%"></div>
+          </div>
+        </div>
+        <div class="rank-views">${count}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderDeviceSplit(views) {
+  const container = document.getElementById('device-split');
+  const total = views.length;
+
+  if (!total) {
+    container.innerHTML = '<div class="empty-section" style="padding:0;">No data yet.</div>';
+    return;
+  }
+
+  const counts = { ios: 0, android: 0, unknown: 0 };
+  views.forEach(v => { counts[v.device_type || 'unknown']++; });
+
+  const iosPct = Math.round((counts.ios / total) * 100);
+  const androidPct = Math.round((counts.android / total) * 100);
+  const unknownPct = 100 - iosPct - androidPct;
+
+  container.innerHTML = `
+    <div class="device-donut">
+      <canvas id="device-chart" width="100" height="100"></canvas>
+    </div>
+    <div class="device-legend">
+      <div class="device-item">
+        <div class="device-dot" style="background:#c8a96e;"></div>
+        <span class="device-name">iPhone (iOS)</span>
+        <span class="device-pct">${iosPct}%</span>
+      </div>
+      <div class="device-item">
+        <div class="device-dot" style="background:rgba(200,169,110,0.45);"></div>
+        <span class="device-name">Android</span>
+        <span class="device-pct">${androidPct}%</span>
+      </div>
+      ${unknownPct > 0 ? `
+      <div class="device-item">
+        <div class="device-dot" style="background:rgba(232,228,220,0.15);"></div>
+        <span class="device-name">Other</span>
+        <span class="device-pct">${unknownPct}%</span>
+      </div>` : ''}
+    </div>`;
+
+  // Donut chart
+  const ctx = document.getElementById('device-chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['iOS', 'Android', 'Unknown'],
+      datasets: [{
+        data: [counts.ios, counts.android, counts.unknown],
+        backgroundColor: ['#c8a96e', 'rgba(200,169,110,0.45)', 'rgba(232,228,220,0.1)'],
+        borderColor: '#111111',
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      cutout: '65%',
+    }
+  });
+}
+
+// ── UTILITIES ────────────────────────────────────────────
+function formatTime(d) {
+  return d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+}
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
