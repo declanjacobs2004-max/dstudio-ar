@@ -1,561 +1,409 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Analytics — D'Studio AR</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<style>
-  :root {
-    --gold: #c8a96e;
-    --gold-dim: rgba(200,169,110,0.10);
-    --gold-mid: rgba(200,169,110,0.22);
-    --bg: #080808;
-    --surface: #111111;
-    --surface2: #181818;
-    --border: rgba(200,169,110,0.14);
-    --text: #e8e4dc;
-    --muted: rgba(232,228,220,0.45);
-    --success: #27ae60;
-    --radius: 10px;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D'Studio AR — Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #c8a96e;
+      --accent-dim: rgba(200,169,110,0.1);
+      --accent-border: rgba(200,169,110,0.25);
+      --bg: #080808;
+      --surface: #101010;
+      --surface2: #161616;
+      --border: #1e1e1e;
+      --text: #efefef;
+      --muted: #555;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); min-height:100vh; }
 
-  /* ── LOGIN ──────────────────────────────── */
-  #login-screen {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-    background: radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.06) 0%, transparent 60%);
-  }
-  .login-box {
-    width: 100%; max-width: 360px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 40px 32px; text-align: center;
-  }
-  .login-box img { width: 100px; margin-bottom: 28px; }
-  .login-box h2 {
-    font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 300;
-    color: var(--gold); margin-bottom: 4px;
-  }
-  .login-restaurant { color: var(--text); font-size: 16px; margin-bottom: 4px; }
-  .login-sub { color: var(--muted); font-size: 12px; margin-bottom: 28px; }
-  .login-input {
-    width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif;
-    font-size: 14px; margin-bottom: 10px; transition: border-color 0.2s;
-  }
-  .login-input:focus { outline: none; border-color: var(--gold); }
-  .login-error { color: #e74c3c; font-size: 12px; margin-bottom: 10px; display: none; }
-  .login-btn {
-    width: 100%; padding: 13px; background: var(--gold); border: none; border-radius: 8px;
-    color: #080808; font-family: 'DM Sans', sans-serif; font-weight: 600;
-    font-size: 14px; cursor: pointer; transition: opacity 0.2s;
-  }
-  .login-btn:hover { opacity: 0.85; }
-  .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* LOGIN */
+    #loginSection {
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; min-height:100vh; padding:40px 20px;
+      background:radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.06) 0%, transparent 70%);
+    }
+    .login-logo { width:56px; filter:invert(1); opacity:0.85; margin-bottom:16px; }
+    .login-title { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:300; letter-spacing:7px; text-transform:uppercase; margin-bottom:4px; }
+    .login-rest-name { font-size:12px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; margin-bottom:48px; min-height:20px; }
+    .login-box { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:36px; width:100%; max-width:400px; }
+    .login-box label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+    .login-box input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:13px 15px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; outline:none; transition:border-color 0.2s; margin-bottom:16px; }
+    .login-box input:focus { border-color:var(--accent); }
+    .error-msg { color:#e05555; font-size:12px; text-align:center; margin-bottom:12px; display:none; }
+    .btn-primary { width:100%; padding:15px; background:var(--accent); color:#080808; border:none; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:opacity 0.2s; }
+    .btn-primary:hover { opacity:0.85; }
+    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+    .btn-secondary { background:transparent; border:1px solid var(--border); color:var(--muted); padding:8px 18px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
+    .btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
 
-  /* ── LOADING/ERROR ──────────────────────── */
-  #loading-screen {
-    min-height: 100vh; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 14px;
-  }
-  .spinner {
-    width: 32px; height: 32px; border: 2px solid rgba(200,169,110,0.15);
-    border-top-color: var(--gold); border-radius: 50%;
-    animation: spin 0.75s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #error-screen {
-    display: none; min-height: 100vh; align-items: center; justify-content: center;
-    flex-direction: column; gap: 12px; text-align: center; padding: 40px 24px;
-  }
-  #error-screen h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); }
-  #error-screen p { color: var(--muted); font-size: 14px; }
+    /* ANALYTICS */
+    #analyticsSection { display:none; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,8,8,0.96); backdrop-filter:blur(16px); z-index:100; }
+    .topbar-left { display:flex; align-items:center; gap:14px; }
+    .topbar-logo { width:32px; filter:invert(1); opacity:0.8; }
+    .topbar-info {}
+    .topbar-title { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:400; letter-spacing:4px; text-transform:uppercase; line-height:1.1; }
+    .topbar-rest { font-size:10px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; }
+    .topbar-right { display:flex; gap:12px; align-items:center; }
 
-  /* ── DASHBOARD SHELL ────────────────────── */
-  #analytics { display: none; }
+    .main { max-width:1100px; margin:0 auto; padding:28px 32px; }
+    @media(max-width:700px) { .main { padding:20px; } .topbar { padding:16px 20px; } }
 
-  .topbar {
-    position: sticky; top: 0; z-index: 50;
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 0 20px; height: 58px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .topbar-brand {
-    display: flex; align-items: center; gap: 10px;
-  }
-  .topbar-brand img { height: 24px; }
-  .topbar-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 16px; color: var(--gold);
-  }
-  .topbar-right { display: flex; gap: 10px; align-items: center; }
-  .btn-logout {
-    padding: 6px 14px; background: transparent; border: 1px solid var(--border);
-    border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, color 0.2s;
-  }
-  .btn-logout:hover { border-color: var(--gold); color: var(--gold); }
+    /* STATS */
+    .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px; }
+    @media(max-width:700px) { .stats-grid { grid-template-columns:1fr 1fr; } }
+    @media(max-width:400px) { .stats-grid { grid-template-columns:1fr; } }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px 22px; }
+    .stat-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .stat-value { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:300; color:var(--accent); line-height:1; margin-bottom:4px; }
+    .stat-sub { font-size:11px; color:var(--muted); }
+    .stat-up { color:#4caf50; }
+    .stat-down { color:#e05555; }
 
-  .main { max-width: 720px; margin: 0 auto; padding: 28px 16px 60px; }
+    /* PANELS */
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:24px; margin-bottom:20px; }
+    .panel-title { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:var(--accent); margin-bottom:20px; display:flex; align-items:center; gap:12px; }
+    .panel-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+    @media(max-width:700px) { .charts-grid { grid-template-columns:1fr; } }
+    .chart-panel { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:24px; }
+    .chart-panel .panel-title { margin-bottom:16px; }
+    .chart-wrap { position:relative; height:220px; }
 
-  /* ── PAGE HEADER ────────────────────────── */
-  .page-header { margin-bottom: 28px; }
-  .page-header h1 {
-    font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 300;
-    color: var(--text); margin-bottom: 4px;
-  }
-  .page-header .sub { color: var(--muted); font-size: 13px; }
+    /* LEADERBOARD */
+    .dish-row { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); gap:12px; }
+    .dish-row:last-child { border-bottom:none; }
+    .dish-rank { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:var(--accent); width:32px; flex-shrink:0; line-height:1; }
+    .dish-row-info { flex:1; min-width:0; }
+    .dish-row-name { font-size:14px; font-weight:500; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .dish-row-bar-wrap { height:4px; background:var(--border); border-radius:4px; margin-top:6px; }
+    .dish-row-bar { height:4px; background:var(--accent); border-radius:4px; transition:width 0.6s ease; }
+    .dish-row-count { font-size:13px; color:var(--accent); font-weight:500; white-space:nowrap; flex-shrink:0; }
 
-  /* ── STAT CARDS ─────────────────────────── */
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 20px 18px; position: relative; overflow: hidden;
-  }
-  .stat-card::after {
-    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--gold), transparent);
-  }
-  .stat-card.full { grid-column: 1 / -1; }
-  .stat-value {
-    font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 300;
-    color: var(--gold); line-height: 1;
-  }
-  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
-  .stat-sub { font-size: 12px; color: var(--text); margin-top: 8px; }
-  .stat-delta { font-size: 11px; margin-top: 4px; }
-  .stat-delta.up { color: var(--success); }
-  .stat-delta.down { color: #e74c3c; }
-  .stat-delta.neutral { color: var(--muted); }
-
-  /* ── SECTION ────────────────────────────── */
-  .section { margin-bottom: 24px; }
-  .section-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400;
-    color: var(--gold); margin-bottom: 14px;
-  }
-
-  /* ── CHART CARD ─────────────────────────── */
-  .chart-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 20px; margin-bottom: 12px;
-  }
-  .chart-card canvas { max-height: 200px; }
-
-  /* ── DISH RANKING ───────────────────────── */
-  .dish-rank-row {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-    padding: 14px 16px; margin-bottom: 8px;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .rank-num {
-    font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--gold);
-    opacity: 0.5; width: 24px; text-align: center; flex-shrink: 0;
-  }
-  .rank-bar-wrap { flex: 1; }
-  .rank-name { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
-  .rank-bar-track { background: rgba(200,169,110,0.08); border-radius: 3px; height: 5px; overflow: hidden; }
-  .rank-bar-fill { background: var(--gold); height: 5px; border-radius: 3px; transition: width 1s ease; }
-  .rank-views { font-size: 15px; color: var(--gold); font-weight: 500; flex-shrink: 0; }
-
-  /* ── DEVICE SPLIT ───────────────────────── */
-  .device-split {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 20px; display: flex; align-items: center; gap: 20px;
-  }
-  .device-donut { flex-shrink: 0; }
-  .device-legend { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-  .device-item { display: flex; align-items: center; gap: 8px; }
-  .device-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .device-name { font-size: 13px; color: var(--text); }
-  .device-pct { font-size: 13px; color: var(--gold); margin-left: auto; font-weight: 500; }
-
-  /* ── EMPTY STATE ────────────────────────── */
-  .empty-section { color: var(--muted); font-size: 13px; padding: 16px 0; }
-
-  /* ── REFRESH ─────────────────────────────── */
-  .refresh-bar {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
-  }
-  .last-updated { font-size: 11px; color: var(--muted); }
-  .btn-refresh {
-    padding: 6px 14px; background: transparent; border: 1px solid var(--border);
-    border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, color 0.2s;
-  }
-  .btn-refresh:hover { border-color: var(--gold); color: var(--gold); }
-
-  @media (max-width: 400px) {
-    .stats-grid { grid-template-columns: 1fr; }
-    .device-split { flex-direction: column; }
-  }
-</style>
+    .empty-state { text-align:center; padding:40px 20px; color:var(--muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; }
+    .loading-state { text-align:center; padding:32px; color:var(--muted); font-size:11px; letter-spacing:3px; text-transform:uppercase; }
+  </style>
 </head>
 <body>
 
-<!-- ── PRE-LOGIN LOADING ────────────────────────────────── -->
-<div id="loading-screen">
-  <div class="spinner"></div>
-  <div style="color:var(--muted);font-size:13px;">Loading…</div>
-</div>
-
-<!-- ── ERROR ─────────────────────────────────────────────── -->
-<div id="error-screen">
-  <h2>Restaurant not found</h2>
-  <p>Check the URL and try again.</p>
-</div>
-
-<!-- ── LOGIN ─────────────────────────────────────────────── -->
-<div id="login-screen" style="display:none;">
+<!-- LOGIN -->
+<div id="loginSection">
+  <img src="D_Studio_logo.png" class="login-logo" alt="D'Studio">
+  <h1 class="login-title">Analytics</h1>
+  <p class="login-rest-name" id="loginRestName">Loading...</p>
   <div class="login-box">
-    <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none';document.getElementById('login-logo-text').style.display='block'" />
-    <div id="login-logo-text" style="display:none;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:28px;">D'Studio AR</div>
-    <h2>Analytics</h2>
-    <div class="login-restaurant" id="login-restaurant-name"></div>
-    <div class="login-sub">Enter your password to view your data</div>
-    <div class="login-error" id="login-error">Incorrect password.</div>
-    <input type="password" class="login-input" id="login-pw" placeholder="Password" autocomplete="current-password" />
-    <button class="login-btn" onclick="doLogin()">View My Analytics</button>
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email">
+    <label>Password</label>
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+    <p class="error-msg" id="errorMsg">Incorrect email or password.</p>
+    <button class="btn-primary" id="loginBtn" onclick="login()">View Analytics</button>
   </div>
 </div>
 
-<!-- ── ANALYTICS DASHBOARD ───────────────────────────────── -->
-<div id="analytics">
+<!-- ANALYTICS -->
+<div id="analyticsSection">
   <div class="topbar">
-    <div class="topbar-brand">
-      <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none'" />
-      <span class="topbar-title" id="topbar-name"></span>
+    <div class="topbar-left">
+      <img src="D_Studio_logo.png" class="topbar-logo" alt="D'Studio">
+      <div class="topbar-info">
+        <div class="topbar-title">D'Studio AR</div>
+        <div class="topbar-rest" id="topbarRestName"></div>
+      </div>
     </div>
     <div class="topbar-right">
-      <button class="btn-logout" onclick="doLogout()">Log Out</button>
+      <button class="btn-secondary" onclick="refreshData()">Refresh</button>
+      <button class="btn-secondary" onclick="logout()">Logout</button>
     </div>
   </div>
 
   <div class="main">
-    <div class="page-header">
-      <h1>Your AR Performance</h1>
-      <div class="sub">Live insight into how customers engage with your AR menu</div>
-    </div>
-
-    <div class="refresh-bar">
-      <div class="last-updated" id="last-updated">—</div>
-      <button class="btn-refresh" onclick="loadAnalytics()">↻ Refresh</button>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-card"><div class="spinner" style="margin:0;width:20px;height:20px;"></div></div>
-    </div>
-
-    <!-- Weekly Trend Chart -->
-    <div class="section">
-      <div class="section-title">Weekly Trend — Last 4 Weeks</div>
-      <div class="chart-card">
-        <canvas id="chart-weekly"></canvas>
-      </div>
-    </div>
-
-    <!-- Peak Hours Chart -->
-    <div class="section">
-      <div class="section-title">Peak Viewing Hours</div>
-      <div class="chart-card">
-        <canvas id="chart-hours"></canvas>
-      </div>
-    </div>
-
-    <!-- Dish Rankings -->
-    <div class="section">
-      <div class="section-title">Dish Popularity Ranking</div>
-      <div id="dish-rankings">
-        <div class="empty-section">Loading…</div>
-      </div>
-    </div>
-
-    <!-- Device Split -->
-    <div class="section">
-      <div class="section-title">Device Split</div>
-      <div class="device-split" id="device-split">
-        <div class="empty-section">Loading…</div>
-      </div>
-    </div>
+    <div id="analyticsContent"><div class="loading-state">Loading analytics...</div></div>
   </div>
 </div>
 
 <script>
 const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
+
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentRestaurant = null;
-let weeklyChart = null;
-let hoursChart = null;
+let chartInstances = {};
 
-const params = new URLSearchParams(window.location.search);
-const restaurantSlug = params.get('restaurant');
+function getRestaurantSlug() {
+  return new URLSearchParams(window.location.search).get('restaurant');
+}
 
-async function boot() {
-  if (!restaurantSlug) return showScreen('error');
-
-  try {
-    const { data: restaurant, error } = await db
-      .from('restaurants')
-      .select('id, name, slug, client_password')
-      .eq('slug', restaurantSlug)
-      .single();
-
-    if (error || !restaurant) return showScreen('error');
-
-    currentRestaurant = restaurant;
-    document.getElementById('login-restaurant-name').textContent = restaurant.name;
-    document.title = `${restaurant.name} — Analytics`;
-
-    // Check session
-    const key = `dstudio_analytics_${restaurant.slug}`;
-    if (sessionStorage.getItem(key) === '1') {
-      showDashboard();
-    } else {
-      showScreen('login');
-    }
-  } catch (e) {
-    showScreen('error');
+// ── LOAD RESTAURANT NAME FOR LOGIN SCREEN ──
+async function loadRestaurantName() {
+  const slug = getRestaurantSlug();
+  if (!slug) {
+    document.getElementById('loginRestName').textContent = 'Invalid link';
+    return;
   }
+  const { data } = await db.from('restaurants').select('name').eq('slug', slug).single();
+  document.getElementById('loginRestName').textContent = data ? data.name : 'Restaurant not found';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-  boot();
-});
+// ── LOGIN ──
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
 
-function doLogin() {
-  const pw = document.getElementById('login-pw').value.trim();
-  const err = document.getElementById('login-error');
-  if (pw === currentRestaurant.client_password) {
-    sessionStorage.setItem(`dstudio_analytics_${currentRestaurant.slug}`, '1');
-    err.style.display = 'none';
-    showDashboard();
-  } else {
-    err.style.display = 'block';
-    document.getElementById('login-pw').value = '';
+  if (!email || !password) {
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('errorMsg').textContent = 'Please enter email and password.';
+    return;
   }
-}
 
-function doLogout() {
-  sessionStorage.removeItem(`dstudio_analytics_${currentRestaurant.slug}`);
-  showScreen('login');
-  document.getElementById('login-pw').value = '';
-}
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
 
-function showScreen(name) {
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('error-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('analytics').style.display = 'none';
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
 
-  if (name === 'error') {
-    document.getElementById('error-screen').style.display = 'flex';
-  } else if (name === 'login') {
-    document.getElementById('login-screen').style.display = 'flex';
-  } else if (name === 'analytics') {
-    document.getElementById('analytics').style.display = 'block';
+  btn.textContent = 'View Analytics';
+  btn.disabled = false;
+
+  if (error || !data.session) {
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('errorMsg').textContent = 'Incorrect email or password.';
+    return;
   }
+
+  // Verify this user owns this restaurant
+  const slug = getRestaurantSlug();
+  const { data: restData, error: restError } = await db
+    .from('restaurants')
+    .select('*')
+    .eq('slug', slug)
+    .eq('auth_user_id', data.session.user.id)
+    .single();
+
+  if (restError || !restData) {
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('errorMsg').textContent = 'Access denied for this restaurant.';
+    await db.auth.signOut();
+    return;
+  }
+
+  currentRestaurant = restData;
+  showAnalytics();
 }
 
-async function showDashboard() {
-  document.getElementById('topbar-name').textContent = currentRestaurant.name;
-  showScreen('analytics');
-  await loadAnalytics();
+async function logout() {
+  await db.auth.signOut();
+  currentRestaurant = null;
+  document.getElementById('analyticsSection').style.display = 'none';
+  document.getElementById('loginSection').style.display = 'flex';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('errorMsg').style.display = 'none';
 }
 
+function showAnalytics() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('analyticsSection').style.display = 'block';
+  document.getElementById('topbarRestName').textContent = currentRestaurant.name;
+  loadAnalytics();
+}
+
+async function refreshData() {
+  document.getElementById('analyticsContent').innerHTML = '<div class="loading-state">Refreshing...</div>';
+  // Destroy existing charts
+  Object.values(chartInstances).forEach(c => c.destroy());
+  chartInstances = {};
+  loadAnalytics();
+}
+
+// ── MAIN ANALYTICS LOAD ──
 async function loadAnalytics() {
-  if (!currentRestaurant) return;
-
-  document.getElementById('last-updated').textContent = 'Updating…';
-
   try {
-    // Fetch all views for this restaurant
-    const { data: views, error: vErr } = await db
+    const now = new Date();
+    const weekStart = new Date(now); weekStart.setDate(now.getDate() - 7); weekStart.setHours(0,0,0,0);
+    const lastWeekStart = new Date(now); lastWeekStart.setDate(now.getDate() - 14); lastWeekStart.setHours(0,0,0,0);
+    const monthStart = new Date(now); monthStart.setDate(now.getDate() - 28); monthStart.setHours(0,0,0,0);
+
+    // Fetch all views for this restaurant in last 28 days
+    const { data: allViews, error: viewsError } = await db
       .from('dish_views')
-      .select('*')
+      .select('*, dishes(dish_name)')
       .eq('restaurant_id', currentRestaurant.id)
+      .gte('viewed_at', monthStart.toISOString())
       .order('viewed_at', { ascending: true });
 
-    if (vErr) throw vErr;
+    if (viewsError) throw new Error(viewsError.message);
 
     // Fetch all dishes for this restaurant
-    const { data: dishes, error: dErr } = await db
+    const { data: dishes, error: dishesError } = await db
       .from('dishes')
-      .select('id, dish_name')
+      .select('*')
       .eq('restaurant_id', currentRestaurant.id);
 
-    if (dErr) throw dErr;
+    if (dishesError) throw new Error(dishesError.message);
 
-    const dishMap = {};
-    (dishes || []).forEach(d => { dishMap[d.id] = d.dish_name; });
+    const thisWeekViews = allViews.filter(v => new Date(v.viewed_at) >= weekStart);
+    const lastWeekViews = allViews.filter(v => new Date(v.viewed_at) >= lastWeekStart && new Date(v.viewed_at) < weekStart);
 
-    const now = new Date();
-    const msPerDay = 86400000;
-    const startOfThisWeek = new Date(now - (now.getDay() * msPerDay));
-    startOfThisWeek.setHours(0,0,0,0);
-    const startOfLastWeek = new Date(startOfThisWeek - 7 * msPerDay);
+    const thisWeekCount = thisWeekViews.length;
+    const lastWeekCount = lastWeekViews.length;
+    const weekChange = lastWeekCount === 0 ? (thisWeekCount > 0 ? 100 : 0) : Math.round(((thisWeekCount - lastWeekCount) / lastWeekCount) * 100);
 
-    const thisWeekViews = (views || []).filter(v => new Date(v.viewed_at) >= startOfThisWeek);
-    const lastWeekViews = (views || []).filter(v => {
-      const d = new Date(v.viewed_at);
-      return d >= startOfLastWeek && d < startOfThisWeek;
-    });
+    // Device split
+    const iosViews = thisWeekViews.filter(v => v.device_type === 'ios').length;
+    const androidViews = thisWeekViews.filter(v => v.device_type === 'android').length;
+    const iosPct = thisWeekCount > 0 ? Math.round((iosViews / thisWeekCount) * 100) : 0;
 
-    // Most & least viewed dish this week
-    const dishCountsThisWeek = {};
+    // Dish view counts this week
+    const dishCounts = {};
     thisWeekViews.forEach(v => {
-      dishCountsThisWeek[v.dish_id] = (dishCountsThisWeek[v.dish_id] || 0) + 1;
+      const name = v.dishes?.dish_name || 'Unknown';
+      dishCounts[name] = (dishCounts[name] || 0) + 1;
     });
-    const sortedDishes = Object.entries(dishCountsThisWeek).sort((a,b) => b[1]-a[1]);
-    const topDish = sortedDishes[0] ? dishMap[sortedDishes[0][0]] || 'Unknown' : '—';
-    const bottomDish = sortedDishes.length > 1
-      ? dishMap[sortedDishes[sortedDishes.length-1][0]] || 'Unknown'
-      : (sortedDishes.length === 1 ? '—' : '—');
+    const sortedDishes = Object.entries(dishCounts).sort((a,b) => b[1] - a[1]);
+    const topDish = sortedDishes[0]?.[0] || '—';
+    const bottomDish = sortedDishes[sortedDishes.length - 1]?.[0] || '—';
 
-    // Delta
-    const delta = thisWeekViews.length - lastWeekViews.length;
-    const deltaText = delta > 0 ? `▲ ${delta} vs last week` : delta < 0 ? `▼ ${Math.abs(delta)} vs last week` : 'Same as last week';
-    const deltaClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
-
-    // Total all time
-    const totalViews = (views || []).length;
-
-    // Render stat cards
-    document.getElementById('stats-grid').innerHTML = `
-      <div class="stat-card">
-        <div class="stat-value">${thisWeekViews.length}</div>
-        <div class="stat-label">Views This Week</div>
-        <div class="stat-delta ${deltaClass}">${deltaText}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${totalViews}</div>
-        <div class="stat-label">Total All-Time Views</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="font-size:20px;padding-top:4px;">${topDish}</div>
-        <div class="stat-label">Most Viewed Dish This Week</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="font-size:20px;padding-top:4px;">${bottomDish}</div>
-        <div class="stat-label">Least Viewed Dish This Week</div>
-      </div>
-    `;
-
-    // ── WEEKLY TREND CHART ─────────────────────────────
-    const weeklyData = buildWeeklyData(views || []);
-    renderWeeklyChart(weeklyData);
-
-    // ── PEAK HOURS CHART ───────────────────────────────
-    const hoursData = buildHoursData(views || []);
-    renderHoursChart(hoursData);
-
-    // ── DISH RANKINGS ──────────────────────────────────
-    renderDishRankings(views || [], dishes || [], dishMap);
-
-    // ── DEVICE SPLIT ───────────────────────────────────
-    renderDeviceSplit(views || []);
-
-    document.getElementById('last-updated').textContent = `Updated ${formatTime(new Date())}`;
-  } catch (e) {
-    document.getElementById('last-updated').textContent = 'Failed to load data';
-  }
-}
-
-// ── DATA BUILDERS ────────────────────────────────────────
-function buildWeeklyData(views) {
-  const weeks = [];
-  const labels = [];
-  const now = new Date();
-  for (let i = 3; i >= 0; i--) {
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay() - i * 7);
-    weekStart.setHours(0,0,0,0);
-    const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
-    const count = views.filter(v => {
-      const d = new Date(v.viewed_at);
-      return d >= weekStart && d < weekEnd;
-    }).length;
-    weeks.push(count);
-    labels.push(i === 0 ? 'This week' : i === 1 ? 'Last week' : `${i} wks ago`);
-  }
-  return { labels, data: weeks };
-}
-
-function buildHoursData(views) {
-  const counts = new Array(24).fill(0);
-  views.forEach(v => {
-    const h = new Date(v.viewed_at).getHours();
-    counts[h]++;
-  });
-  const labels = counts.map((_, i) => {
-    if (i === 0) return '12am';
-    if (i === 12) return '12pm';
-    return i < 12 ? `${i}am` : `${i-12}pm`;
-  });
-  return { labels, data: counts };
-}
-
-// ── CHART RENDERERS ──────────────────────────────────────
-const CHART_DEFAULTS = {
-  color: '#c8a96e',
-  gridColor: 'rgba(200,169,110,0.08)',
-  tickColor: 'rgba(232,228,220,0.35)',
-  font: 'DM Sans'
-};
-
-function renderWeeklyChart(weeklyData) {
-  const ctx = document.getElementById('chart-weekly').getContext('2d');
-  if (weeklyChart) weeklyChart.destroy();
-  weeklyChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: weeklyData.labels,
-      datasets: [{
-        label: 'Views',
-        data: weeklyData.data,
-        backgroundColor: 'rgba(200,169,110,0.25)',
-        borderColor: '#c8a96e',
-        borderWidth: 1.5,
-        borderRadius: 4,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: {
-          grid: { color: CHART_DEFAULTS.gridColor },
-          ticks: { color: CHART_DEFAULTS.tickColor, font: { family: CHART_DEFAULTS.font, size: 11 } }
-        },
-        y: {
-          grid: { color: CHART_DEFAULTS.gridColor },
-          ticks: { color: CHART_DEFAULTS.tickColor, font: { family: CHART_DEFAULTS.font, size: 11 }, stepSize: 1 },
-          beginAtZero: true
-        }
-      }
+    // Daily views for trend chart (last 28 days)
+    const dailyMap = {};
+    for (let i = 27; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      dailyMap[key] = 0;
     }
-  });
+    allViews.forEach(v => {
+      const key = v.viewed_at.split('T')[0];
+      if (dailyMap[key] !== undefined) dailyMap[key]++;
+    });
+
+    // Hourly views this week
+    const hourlyMap = Array(24).fill(0);
+    thisWeekViews.forEach(v => {
+      const h = new Date(v.viewed_at).getHours();
+      hourlyMap[h]++;
+    });
+
+    renderAnalytics({
+      thisWeekCount, lastWeekCount, weekChange,
+      iosPct, androidPct: 100 - iosPct, iosViews, androidViews,
+      topDish, bottomDish,
+      sortedDishes, dailyMap, hourlyMap,
+      totalDishes: dishes.length
+    });
+
+  } catch (e) {
+    document.getElementById('analyticsContent').innerHTML = `<div class="empty-state">Error loading analytics: ${e.message}</div>`;
+  }
 }
 
-function renderHoursChart(hoursData) {
-  const ctx = document.getElementById('chart-hours').getContext('2d');
-  if (hoursChart) hoursChart.destroy();
-  hoursChart = new Chart(ctx, {
+function renderAnalytics(d) {
+  const changeClass = d.weekChange >= 0 ? 'stat-up' : 'stat-down';
+  const changeStr = (d.weekChange >= 0 ? '+' : '') + d.weekChange + '%';
+
+  const html = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Views This Week</div>
+        <div class="stat-value">${d.thisWeekCount}</div>
+        <div class="stat-sub ${changeClass}">${changeStr} vs last week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Views Last Week</div>
+        <div class="stat-value">${d.lastWeekCount}</div>
+        <div class="stat-sub">Previous 7 days</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">iPhone vs Android</div>
+        <div class="stat-value">${d.iosPct}%</div>
+        <div class="stat-sub">iPhone · ${100 - d.iosPct}% Android</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Top Dish This Week</div>
+        <div class="stat-value" style="font-size:22px;margin-top:4px;">${d.topDish}</div>
+        <div class="stat-sub">Most AR views</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Least Viewed</div>
+        <div class="stat-value" style="font-size:22px;margin-top:4px;">${d.bottomDish}</div>
+        <div class="stat-sub">Least AR views</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Dishes</div>
+        <div class="stat-value">${d.totalDishes}</div>
+        <div class="stat-sub">On your AR menu</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-panel">
+        <div class="panel-title">28-Day Trend</div>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="chart-panel">
+        <div class="panel-title">Peak Hours This Week</div>
+        <div class="chart-wrap"><canvas id="hourlyChart"></canvas></div>
+      </div>
+      <div class="chart-panel">
+        <div class="panel-title">Device Split This Week</div>
+        <div class="chart-wrap"><canvas id="deviceChart"></canvas></div>
+      </div>
+      <div class="panel" style="margin-bottom:0;">
+        <div class="panel-title">Dish Leaderboard</div>
+        <div id="leaderboard">
+          ${d.sortedDishes.length === 0
+            ? '<div class="empty-state">No views this week yet.</div>'
+            : d.sortedDishes.map((item, i) => {
+                const maxCount = d.sortedDishes[0][1];
+                const pct = maxCount > 0 ? Math.round((item[1] / maxCount) * 100) : 0;
+                return `
+                  <div class="dish-row">
+                    <div class="dish-rank">${i + 1}</div>
+                    <div class="dish-row-info">
+                      <div class="dish-row-name">${item[0]}</div>
+                      <div class="dish-row-bar-wrap"><div class="dish-row-bar" style="width:${pct}%"></div></div>
+                    </div>
+                    <div class="dish-row-count">${item[1]} view${item[1] !== 1 ? 's' : ''}</div>
+                  </div>
+                `;
+              }).join('')
+          }
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('analyticsContent').innerHTML = html;
+
+  const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+  };
+
+  const gridColor = '#1e1e1e';
+  const tickColor = '#555';
+
+  // Trend chart
+  const trendLabels = Object.keys(d.dailyMap).map(k => {
+    const parts = k.split('-');
+    return `${parts[2]}/${parts[1]}`;
+  });
+
+  chartInstances.trend = new Chart(document.getElementById('trendChart'), {
     type: 'line',
     data: {
-      labels: hoursData.labels,
+      labels: trendLabels,
       datasets: [{
-        label: 'Views',
-        data: hoursData.data,
+        data: Object.values(d.dailyMap),
         borderColor: '#c8a96e',
         backgroundColor: 'rgba(200,169,110,0.08)',
         borderWidth: 2,
@@ -565,126 +413,86 @@ function renderHoursChart(hoursData) {
       }]
     },
     options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
+      ...chartDefaults,
       scales: {
-        x: {
-          grid: { color: CHART_DEFAULTS.gridColor },
-          ticks: {
-            color: CHART_DEFAULTS.tickColor,
-            font: { family: CHART_DEFAULTS.font, size: 10 },
-            maxTicksLimit: 8
-          }
-        },
-        y: {
-          grid: { color: CHART_DEFAULTS.gridColor },
-          ticks: { color: CHART_DEFAULTS.tickColor, font: { family: CHART_DEFAULTS.font, size: 11 }, stepSize: 1 },
-          beginAtZero: true
-        }
+        x: { ticks: { color: tickColor, maxTicksLimit: 7, font: { size: 10 } }, grid: { color: gridColor } },
+        y: { ticks: { color: tickColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true }
       }
     }
   });
-}
 
-function renderDishRankings(views, dishes, dishMap) {
-  const container = document.getElementById('dish-rankings');
-  if (!dishes.length) {
-    container.innerHTML = '<div class="empty-section">No dishes added yet.</div>';
-    return;
-  }
-
-  const dishCounts = {};
-  dishes.forEach(d => { dishCounts[d.id] = 0; });
-  views.forEach(v => {
-    if (dishCounts[v.dish_id] !== undefined) dishCounts[v.dish_id]++;
-  });
-
-  const sorted = Object.entries(dishCounts).sort((a,b) => b[1]-a[1]);
-  const max = sorted[0] ? sorted[0][1] : 1;
-
-  container.innerHTML = sorted.map(([id, count], i) => {
-    const pct = max > 0 ? Math.round((count / max) * 100) : 0;
-    return `
-      <div class="dish-rank-row">
-        <div class="rank-num">${i + 1}</div>
-        <div class="rank-bar-wrap">
-          <div class="rank-name">${escHtml(dishMap[id] || 'Unknown dish')}</div>
-          <div class="rank-bar-track">
-            <div class="rank-bar-fill" style="width:${pct}%"></div>
-          </div>
-        </div>
-        <div class="rank-views">${count}</div>
-      </div>`;
-  }).join('');
-}
-
-function renderDeviceSplit(views) {
-  const container = document.getElementById('device-split');
-  const total = views.length;
-
-  if (!total) {
-    container.innerHTML = '<div class="empty-section" style="padding:0;">No data yet.</div>';
-    return;
-  }
-
-  const counts = { ios: 0, android: 0, unknown: 0 };
-  views.forEach(v => { counts[v.device_type || 'unknown']++; });
-
-  const iosPct = Math.round((counts.ios / total) * 100);
-  const androidPct = Math.round((counts.android / total) * 100);
-  const unknownPct = 100 - iosPct - androidPct;
-
-  container.innerHTML = `
-    <div class="device-donut">
-      <canvas id="device-chart" width="100" height="100"></canvas>
-    </div>
-    <div class="device-legend">
-      <div class="device-item">
-        <div class="device-dot" style="background:#c8a96e;"></div>
-        <span class="device-name">iPhone (iOS)</span>
-        <span class="device-pct">${iosPct}%</span>
-      </div>
-      <div class="device-item">
-        <div class="device-dot" style="background:rgba(200,169,110,0.45);"></div>
-        <span class="device-name">Android</span>
-        <span class="device-pct">${androidPct}%</span>
-      </div>
-      ${unknownPct > 0 ? `
-      <div class="device-item">
-        <div class="device-dot" style="background:rgba(232,228,220,0.15);"></div>
-        <span class="device-name">Other</span>
-        <span class="device-pct">${unknownPct}%</span>
-      </div>` : ''}
-    </div>`;
-
-  // Donut chart
-  const ctx = document.getElementById('device-chart').getContext('2d');
-  new Chart(ctx, {
-    type: 'doughnut',
+  // Hourly chart
+  chartInstances.hourly = new Chart(document.getElementById('hourlyChart'), {
+    type: 'bar',
     data: {
-      labels: ['iOS', 'Android', 'Unknown'],
+      labels: Array.from({length:24}, (_,i) => i + 'h'),
       datasets: [{
-        data: [counts.ios, counts.android, counts.unknown],
-        backgroundColor: ['#c8a96e', 'rgba(200,169,110,0.45)', 'rgba(232,228,220,0.1)'],
-        borderColor: '#111111',
-        borderWidth: 2,
+        data: d.hourlyMap,
+        backgroundColor: 'rgba(200,169,110,0.6)',
+        borderRadius: 4,
       }]
     },
     options: {
-      responsive: false,
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      ...chartDefaults,
+      scales: {
+        x: { ticks: { color: tickColor, font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: gridColor } },
+        y: { ticks: { color: tickColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
+  });
+
+  // Device doughnut
+  chartInstances.device = new Chart(document.getElementById('deviceChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['iPhone', 'Android'],
+      datasets: [{
+        data: [d.iosViews, d.androidViews],
+        backgroundColor: ['#c8a96e', '#3a3020'],
+        borderColor: '#080808',
+        borderWidth: 3,
+      }]
+    },
+    options: {
+      ...chartDefaults,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: { color: '#555', font: { size: 11 }, padding: 16, boxWidth: 12 }
+        }
+      },
       cutout: '65%',
     }
   });
 }
 
-// ── UTILITIES ────────────────────────────────────────────
-function formatTime(d) {
-  return d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
-}
-function escHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// ── ENTER KEY ──
+document.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') login();
+});
+
+// ── INIT ──
+(async () => {
+  await loadRestaurantName();
+
+  // Check if already logged in
+  const { data } = await db.auth.getSession();
+  if (data.session) {
+    const slug = getRestaurantSlug();
+    const { data: restData } = await db
+      .from('restaurants')
+      .select('*')
+      .eq('slug', slug)
+      .eq('auth_user_id', data.session.user.id)
+      .single();
+
+    if (restData) {
+      currentRestaurant = restData;
+      showAnalytics();
+    }
+  }
+})();
 </script>
 </body>
 </html>
