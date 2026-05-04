@@ -30,6 +30,7 @@
   #login-screen {
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
     background: radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.07) 0%, transparent 60%);
+    padding: 24px;
   }
   .login-box {
     width: 100%; max-width: 380px; padding: 48px 40px;
@@ -37,6 +38,7 @@
     text-align: center;
   }
   .login-box img { width: 120px; margin-bottom: 32px; }
+  .login-logo-text { display:none; font-family:'Cormorant Garamond',serif; font-size:26px; color:var(--gold); margin-bottom:32px; }
   .login-box h1 {
     font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300;
     color: var(--gold); letter-spacing: 0.03em; margin-bottom: 6px;
@@ -48,7 +50,11 @@
     font-size: 14px; margin-bottom: 12px; transition: border-color 0.2s;
   }
   .login-box input:focus { outline: none; border-color: var(--gold); }
-  .login-error { color: var(--error); font-size: 12px; margin-bottom: 12px; display: none; }
+  .login-error {
+    color: #e74c3c; font-size: 12px; margin-bottom: 12px;
+    padding: 10px 14px; background: rgba(192,57,43,0.1); border-radius: 6px;
+    border: 1px solid rgba(192,57,43,0.2); display: none; text-align: left;
+  }
   .btn-primary {
     width: 100%; padding: 13px; background: var(--gold); border: none; border-radius: var(--radius);
     color: #080808; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 14px;
@@ -66,8 +72,9 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   .topbar img { height: 28px; }
+  .topbar-logo-text { font-family:'Cormorant Garamond',serif; color:var(--gold); font-size:18px; display:none; }
   .topbar-right { display: flex; align-items: center; gap: 16px; }
-  .topbar-label { color: var(--muted); font-size: 12px; }
+  .topbar-email { color: var(--muted); font-size: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .btn-logout {
     padding: 7px 16px; background: transparent; border: 1px solid var(--border);
     border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer;
@@ -78,9 +85,7 @@
   .main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
 
   /* ── STATS ROW ────────────────────────────────── */
-  .stats-row {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px;
-  }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
   .stat-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 24px; position: relative; overflow: hidden;
@@ -89,20 +94,13 @@
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
     background: linear-gradient(90deg, var(--gold), transparent);
   }
-  .stat-value {
-    font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 300;
-    color: var(--gold); line-height: 1;
-  }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 300; color: var(--gold); line-height: 1; }
   .stat-label { color: var(--muted); font-size: 12px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
 
   /* ── SECTION HEADING ──────────────────────────── */
-  .section-head {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 20px;
-  }
-  .section-head h2 {
-    font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--gold);
-  }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .section-head h2 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--gold); }
+
   .btn-sm {
     padding: 8px 16px; background: var(--gold); border: none; border-radius: 6px;
     color: #080808; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 12px;
@@ -123,50 +121,30 @@
   .btn-danger:hover { border-color: var(--error); color: var(--error); }
 
   /* ── CARDS ────────────────────────────────────── */
-  .restaurant-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    margin-bottom: 12px; overflow: hidden;
-  }
+  .restaurant-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
   .restaurant-card-head {
     padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
     cursor: pointer; transition: background 0.15s;
   }
   .restaurant-card-head:hover { background: var(--surface2); }
-  .restaurant-card-name {
-    font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .badge-active {
-    display: inline-block; padding: 2px 8px; background: rgba(39,174,96,0.15);
-    border: 1px solid rgba(39,174,96,0.3); border-radius: 20px;
-    color: #27ae60; font-size: 10px; font-family: 'DM Sans', sans-serif;
-    text-transform: uppercase; letter-spacing: 0.06em;
-  }
-  .badge-inactive {
-    display: inline-block; padding: 2px 8px; background: rgba(232,228,220,0.05);
-    border: 1px solid rgba(232,228,220,0.1); border-radius: 20px;
-    color: var(--muted); font-size: 10px; font-family: 'DM Sans', sans-serif;
-    text-transform: uppercase; letter-spacing: 0.06em;
-  }
+  .restaurant-card-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400; display: flex; align-items: center; gap: 10px; }
+  .badge-active { display: inline-block; padding: 2px 8px; background: rgba(39,174,96,0.15); border: 1px solid rgba(39,174,96,0.3); border-radius: 20px; color: #27ae60; font-size: 10px; font-family: 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; }
+  .badge-inactive { display: inline-block; padding: 2px 8px; background: rgba(232,228,220,0.05); border: 1px solid rgba(232,228,220,0.1); border-radius: 20px; color: var(--muted); font-size: 10px; font-family: 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; }
   .card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .chevron { color: var(--muted); transition: transform 0.2s; font-size: 12px; }
   .chevron.open { transform: rotate(180deg); }
-
   .restaurant-card-body { display: none; border-top: 1px solid var(--border); padding: 20px; }
   .restaurant-card-body.open { display: block; }
 
   .card-meta { display: flex; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
   .card-meta-item { display: flex; flex-direction: column; gap: 3px; }
   .card-meta-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-  .card-meta-value { font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; }
+  .card-meta-value { font-size: 13px; color: var(--text); }
   .card-meta-value a { color: var(--gold); text-decoration: none; }
   .card-meta-value a:hover { text-decoration: underline; }
 
-  /* ── DISHES TABLE ─────────────────────────────── */
-  .dishes-section { margin-top: 8px; }
-  .dishes-section-head {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
-  }
+  /* ── DISHES ───────────────────────────────────── */
+  .dishes-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .dishes-section-head span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
   .dish-row {
     background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
@@ -191,10 +169,7 @@
     padding: 32px; transform: translateY(12px); transition: transform 0.2s;
   }
   .modal-overlay.open .modal { transform: translateY(0); }
-  .modal h3 {
-    font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400;
-    color: var(--gold); margin-bottom: 24px;
-  }
+  .modal h3 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--gold); margin-bottom: 24px; }
   .form-group { margin-bottom: 16px; }
   .form-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
   .form-input {
@@ -203,11 +178,10 @@
     font-size: 14px; transition: border-color 0.2s;
   }
   .form-input:focus { outline: none; border-color: var(--gold); }
-  .form-input[type="checkbox"] { width: auto; }
   .form-textarea { resize: vertical; min-height: 80px; }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .form-actions { display: flex; gap: 10px; margin-top: 24px; }
-  .form-error { color: var(--error); font-size: 12px; margin-top: 8px; display: none; }
+  .form-error { color: var(--error); font-size: 12px; margin-top: 8px; padding: 8px 12px; background: rgba(192,57,43,0.08); border-radius: 4px; display: none; }
   .form-check { display: flex; align-items: center; gap: 10px; }
   .form-check input { accent-color: var(--gold); }
 
@@ -216,49 +190,41 @@
     position: fixed; bottom: 24px; right: 24px; z-index: 300;
     background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
     padding: 14px 20px; font-size: 13px; max-width: 300px;
-    transform: translateY(20px); opacity: 0; transition: all 0.25s;
-    pointer-events: none;
+    transform: translateY(20px); opacity: 0; transition: all 0.25s; pointer-events: none;
   }
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.success { border-color: rgba(39,174,96,0.4); color: #2ecc71; }
   .toast.error { border-color: rgba(192,57,43,0.4); color: #e74c3c; }
 
-  /* ── EMPTY STATE ──────────────────────────────── */
-  .empty-state {
-    text-align: center; padding: 48px 20px; color: var(--muted);
-  }
+  /* ── EMPTY / LOADING ──────────────────────────── */
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
   .empty-state p { margin-bottom: 16px; }
-
-  /* ── LOADING ──────────────────────────────────── */
   .loading { text-align: center; padding: 48px; color: var(--muted); }
-  .spinner {
-    width: 28px; height: 28px; border: 2px solid var(--border);
-    border-top-color: var(--gold); border-radius: 50%;
-    animation: spin 0.7s linear infinite; margin: 0 auto 12px;
-  }
+  .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── RESPONSIVE ───────────────────────────────── */
   @media (max-width: 600px) {
     .stats-row { grid-template-columns: 1fr; }
     .main { padding: 20px 16px; }
     .topbar { padding: 0 16px; }
     .form-row { grid-template-columns: 1fr; }
-    .card-actions { flex-direction: column; align-items: flex-start; }
+    .card-actions { gap: 6px; }
     .modal { padding: 24px 20px; }
+    .topbar-email { display: none; }
   }
 </style>
 </head>
 <body>
 
-<!-- ── LOGIN SCREEN ─────────────────────────────────────── -->
+<!-- ── LOGIN ─────────────────────────────────────────────── -->
 <div id="login-screen">
   <div class="login-box">
-    <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none'; document.getElementById('login-logo-text').style.display='block'" />
-    <div id="login-logo-text" style="display:none; font-family:'Cormorant Garamond',serif; font-size:26px; color:var(--gold); margin-bottom:32px;">D'Studio AR</div>
+    <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none';document.querySelector('.login-logo-text').style.display='block'" />
+    <div class="login-logo-text">D'Studio AR</div>
     <h1>Admin Dashboard</h1>
-    <p>D'Studio AR Platform</p>
-    <div class="login-error" id="login-error">Incorrect password. Try again.</div>
+    <p>Sign in with your D'Studio admin account</p>
+    <div class="login-error" id="login-error"></div>
+    <input type="email" id="login-email" placeholder="Email address" autocomplete="email" />
     <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password" />
     <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
   </div>
@@ -267,15 +233,15 @@
 <!-- ── DASHBOARD ─────────────────────────────────────────── -->
 <div id="dashboard">
   <div class="topbar">
-    <img src="D_Studio_logo.png" alt="D'Studio" height="28" onerror="this.outerHTML='<span style=\'font-family:Cormorant Garamond,serif;color:var(--gold);font-size:18px;\'>D\'Studio AR</span>'" />
+    <img src="D_Studio_logo.png" alt="D'Studio" height="28" onerror="this.style.display='none';document.querySelector('.topbar-logo-text').style.display='block'" />
+    <span class="topbar-logo-text">D'Studio AR</span>
     <div class="topbar-right">
-      <span class="topbar-label">Admin</span>
+      <span class="topbar-email" id="topbar-email"></span>
       <button class="btn-logout" onclick="doLogout()">Log Out</button>
     </div>
   </div>
 
   <div class="main">
-    <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-value" id="stat-clients">—</div>
@@ -291,7 +257,6 @@
       </div>
     </div>
 
-    <!-- Restaurants -->
     <div class="section-head">
       <h2>Restaurants</h2>
       <button class="btn-sm" onclick="openAddRestaurantModal()">+ Add Restaurant</button>
@@ -311,7 +276,7 @@
       <input class="form-input" type="text" id="new-rest-name" placeholder="e.g. Hudson's Burger Co" />
     </div>
     <div class="form-group">
-      <label class="form-label">Slug <span style="color:var(--muted);font-size:11px;">(URL identifier — lowercase, hyphens only)</span></label>
+      <label class="form-label">Slug <span style="color:var(--muted);font-size:11px;">(lowercase, hyphens only)</span></label>
       <input class="form-input" type="text" id="new-rest-slug" placeholder="e.g. hudsons-burger-co" />
     </div>
     <div class="form-group">
@@ -320,12 +285,41 @@
     </div>
     <div class="form-group form-check">
       <input type="checkbox" id="new-rest-active" />
-      <label for="new-rest-active" style="font-size:13px; color:var(--text);">Active paying client</label>
+      <label for="new-rest-active" style="font-size:13px;">Active paying client</label>
     </div>
     <div class="form-error" id="add-rest-error"></div>
     <div class="form-actions">
       <button class="btn-primary" onclick="submitAddRestaurant()">Create Restaurant</button>
       <button class="btn-sm-outline" onclick="closeModal('modal-add-restaurant')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: EDIT RESTAURANT ────────────────────────────── -->
+<div class="modal-overlay" id="modal-edit-restaurant">
+  <div class="modal">
+    <h3>Edit Restaurant</h3>
+    <input type="hidden" id="edit-rest-id" />
+    <div class="form-group">
+      <label class="form-label">Restaurant Name</label>
+      <input class="form-input" type="text" id="edit-rest-name" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Slug</label>
+      <input class="form-input" type="text" id="edit-rest-slug" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Client Analytics Password</label>
+      <input class="form-input" type="text" id="edit-rest-password" />
+    </div>
+    <div class="form-group form-check">
+      <input type="checkbox" id="edit-rest-active" />
+      <label for="edit-rest-active" style="font-size:13px;">Active paying client</label>
+    </div>
+    <div class="form-error" id="edit-rest-error"></div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="submitEditRestaurant()">Save Changes</button>
+      <button class="btn-sm-outline" onclick="closeModal('modal-edit-restaurant')">Cancel</button>
     </div>
   </div>
 </div>
@@ -351,7 +345,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Description</label>
-      <textarea class="form-input form-textarea" id="new-dish-desc" placeholder="Short description of the dish…"></textarea>
+      <textarea class="form-input form-textarea" id="new-dish-desc" placeholder="Short description…"></textarea>
     </div>
     <div class="form-group">
       <label class="form-label">3D Model URL (GLB — Android)</label>
@@ -369,95 +363,94 @@
   </div>
 </div>
 
-<!-- ── MODAL: EDIT RESTAURANT ────────────────────────────── -->
-<div class="modal-overlay" id="modal-edit-restaurant">
-  <div class="modal">
-    <h3>Edit Restaurant</h3>
-    <input type="hidden" id="edit-rest-id" />
-    <div class="form-group">
-      <label class="form-label">Restaurant Name</label>
-      <input class="form-input" type="text" id="edit-rest-name" />
-    </div>
-    <div class="form-group">
-      <label class="form-label">Slug</label>
-      <input class="form-input" type="text" id="edit-rest-slug" />
-    </div>
-    <div class="form-group">
-      <label class="form-label">Client Analytics Password</label>
-      <input class="form-input" type="text" id="edit-rest-password" />
-    </div>
-    <div class="form-group form-check">
-      <input type="checkbox" id="edit-rest-active" />
-      <label for="edit-rest-active" style="font-size:13px; color:var(--text);">Active paying client</label>
-    </div>
-    <div class="form-error" id="edit-rest-error"></div>
-    <div class="form-actions">
-      <button class="btn-primary" onclick="submitEditRestaurant()">Save Changes</button>
-      <button class="btn-sm-outline" onclick="closeModal('modal-edit-restaurant')">Cancel</button>
-    </div>
-  </div>
-</div>
-
 <!-- ── TOAST ─────────────────────────────────────────────── -->
 <div class="toast" id="toast"></div>
 
 <script>
 const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
-const ADMIN_PASSWORD = 'Decl@n123';
 const BASE_URL = 'https://dstudio-ar.vercel.app';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── LOGIN ────────────────────────────────────────────────
-document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-
-function doLogin() {
-  const pw = document.getElementById('login-pw').value.trim();
-  const err = document.getElementById('login-error');
-  if (pw === ADMIN_PASSWORD) {
-    sessionStorage.setItem('dstudio_admin', '1');
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    loadDashboard();
-  } else {
-    err.style.display = 'block';
-    document.getElementById('login-pw').value = '';
+// ── AUTH ─────────────────────────────────────────────────
+async function boot() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    showDashboard(session.user);
   }
 }
 
-function doLogout() {
-  sessionStorage.removeItem('dstudio_admin');
-  location.reload();
+document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-pw').focus(); });
+document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+
+  if (!email || !password) {
+    errEl.textContent = 'Please enter your email and password.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  errEl.style.display = 'none';
+
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    errEl.textContent = 'Incorrect email or password.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Sign In';
+    return;
+  }
+
+  showDashboard(data.user);
 }
 
-// Auto-login if session exists
-if (sessionStorage.getItem('dstudio_admin') === '1') {
+async function doLogout() {
+  await db.auth.signOut();
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pw').value = '';
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('login-btn').textContent = 'Sign In';
+}
+
+function showDashboard(user) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('topbar-email').textContent = user.email;
   loadDashboard();
 }
 
-// ── LOAD DASHBOARD ───────────────────────────────────────
+// ── LOAD DATA ────────────────────────────────────────────
 async function loadDashboard() {
   try {
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) return doLogout();
+
     const [{ data: restaurants, error: rErr }, { data: dishes, error: dErr }] = await Promise.all([
       db.from('restaurants').select('*').order('created_at', { ascending: false }),
       db.from('dishes').select('*')
     ]);
+
     if (rErr) throw rErr;
     if (dErr) throw dErr;
 
-    const active = restaurants.filter(r => r.is_active);
+    const active = (restaurants || []).filter(r => r.is_active);
     document.getElementById('stat-clients').textContent = active.length;
-    document.getElementById('stat-dishes').textContent = dishes.length;
-    const revenue = active.length * 650;
-    document.getElementById('stat-revenue').textContent = `R ${revenue.toLocaleString()}`;
+    document.getElementById('stat-dishes').textContent = (dishes || []).length;
+    document.getElementById('stat-revenue').textContent = `R ${(active.length * 650).toLocaleString()}`;
 
-    renderRestaurants(restaurants, dishes);
+    renderRestaurants(restaurants || [], dishes || []);
   } catch (e) {
-    document.getElementById('restaurants-list').innerHTML = `<div class="empty-state"><p style="color:var(--error)">Failed to load data: ${e.message}</p></div>`;
+    document.getElementById('restaurants-list').innerHTML = `<div class="empty-state"><p style="color:var(--error)">Failed to load: ${e.message}</p></div>`;
   }
 }
 
@@ -472,9 +465,7 @@ function renderRestaurants(restaurants, dishes) {
     const rDishes = dishes.filter(d => d.restaurant_id === r.id);
     const menuLink = `${BASE_URL}/menu.html?restaurant=${r.slug}`;
     const analyticsLink = `${BASE_URL}/analytics.html?restaurant=${r.slug}`;
-    const badge = r.is_active
-      ? '<span class="badge-active">Active</span>'
-      : '<span class="badge-inactive">Demo</span>';
+    const badge = r.is_active ? '<span class="badge-active">Active</span>' : '<span class="badge-inactive">Demo</span>';
 
     const dishRows = rDishes.length ? rDishes.map(d => {
       const arLink = `${BASE_URL}/dish.html?restaurant=${r.slug}&dish=${d.slug}`;
@@ -486,10 +477,10 @@ function renderRestaurants(restaurants, dishes) {
           </div>
           <div class="dish-actions">
             <button class="btn-sm-outline" onclick="copyToClipboard('${arLink}', 'AR link copied')">Copy AR Link</button>
-            <button class="btn-danger" onclick="deleteDish('${d.id}', '${r.id}')">Delete</button>
+            <button class="btn-danger" onclick="deleteDish('${d.id}')">Delete</button>
           </div>
         </div>`;
-    }).join('') : `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No dishes yet. Add your first dish.</div>`;
+    }).join('') : `<div style="color:var(--muted);font-size:13px;padding:8px 0;">No dishes yet.</div>`;
 
     return `
       <div class="restaurant-card" id="card-${r.id}">
@@ -497,7 +488,7 @@ function renderRestaurants(restaurants, dishes) {
           <div class="restaurant-card-name">${escHtml(r.name)} ${badge}</div>
           <div class="card-actions" onclick="event.stopPropagation()">
             <button class="btn-sm-outline" onclick="copyToClipboard('${menuLink}', 'Menu link copied')">Menu Link</button>
-            <button class="btn-sm-outline" onclick="openEditRestaurantModal('${r.id}', '${escAttr(r.name)}', '${escAttr(r.slug)}', '${escAttr(r.client_password || '')}', ${r.is_active})">Edit</button>
+            <button class="btn-sm-outline" onclick="openEditRestaurantModal('${r.id}','${escAttr(r.name)}','${escAttr(r.slug)}','${escAttr(r.client_password||'')}',${r.is_active})">Edit</button>
             <button class="btn-danger" onclick="deleteRestaurant('${r.id}')">Delete</button>
             <span class="chevron" id="chevron-${r.id}">▼</span>
           </div>
@@ -514,7 +505,7 @@ function renderRestaurants(restaurants, dishes) {
             </div>
             <div class="card-meta-item">
               <span class="card-meta-label">Client Password</span>
-              <span class="card-meta-value" style="font-family:monospace">${escHtml(r.client_password || '—')}</span>
+              <span class="card-meta-value" style="font-family:monospace">${escHtml(r.client_password||'—')}</span>
             </div>
           </div>
           <div class="dishes-section">
@@ -530,11 +521,8 @@ function renderRestaurants(restaurants, dishes) {
 }
 
 function toggleCard(id) {
-  const body = document.getElementById(`body-${id}`);
-  const chevron = document.getElementById(`chevron-${id}`);
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  chevron.classList.toggle('open', !isOpen);
+  document.getElementById(`body-${id}`).classList.toggle('open');
+  document.getElementById(`chevron-${id}`).classList.toggle('open');
 }
 
 // ── ADD RESTAURANT ───────────────────────────────────────
@@ -546,21 +534,24 @@ function openAddRestaurantModal() {
 }
 
 document.getElementById('new-rest-name').addEventListener('input', function() {
-  document.getElementById('new-rest-slug').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  document.getElementById('new-rest-slug').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 });
 
 async function submitAddRestaurant() {
   const name = document.getElementById('new-rest-name').value.trim();
   const slug = document.getElementById('new-rest-slug').value.trim();
-  const password = document.getElementById('new-rest-password').value.trim();
+  const client_password = document.getElementById('new-rest-password').value.trim();
   const is_active = document.getElementById('new-rest-active').checked;
 
-  if (!name || !slug || !password) return showError('add-rest-error', 'Please fill in all fields.');
+  if (!name || !slug || !client_password) return showError('add-rest-error', 'Please fill in all fields.');
   if (!/^[a-z0-9-]+$/.test(slug)) return showError('add-rest-error', 'Slug must be lowercase letters, numbers and hyphens only.');
+
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return showError('add-rest-error', 'Not authenticated.');
 
   const btn = event.target; btn.disabled = true; btn.textContent = 'Creating…';
   try {
-    const { error } = await db.from('restaurants').insert({ name, slug, is_active, client_password: password });
+    const { error } = await db.from('restaurants').insert({ name, slug, is_active, client_password, user_id: user.id });
     if (error) throw error;
     closeModal('modal-add-restaurant');
     showToast('Restaurant created', 'success');
@@ -621,7 +612,7 @@ function openAddDishModal(restaurantId) {
 }
 
 document.getElementById('new-dish-name').addEventListener('input', function() {
-  document.getElementById('new-dish-slug').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  document.getElementById('new-dish-slug').value = this.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 });
 
 async function submitAddDish() {
@@ -643,11 +634,11 @@ async function submitAddDish() {
     showToast('Dish added', 'success');
     loadDashboard();
   } catch (e) {
-    showError('add-dish-error', e.message.includes('unique') ? 'A dish with that slug already exists for this restaurant.' : e.message);
+    showError('add-dish-error', e.message.includes('unique') ? 'A dish with that slug already exists.' : e.message);
   } finally { btn.disabled = false; btn.textContent = 'Add Dish'; }
 }
 
-async function deleteDish(dishId, restaurantId) {
+async function deleteDish(dishId) {
   if (!confirm('Delete this dish?')) return;
   try {
     const { error } = await db.from('dishes').delete().eq('id', dishId);
@@ -663,15 +654,8 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 document.querySelectorAll('.modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
 });
-
-function showError(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = msg; el.style.display = 'block';
-}
-function hideError(id) {
-  const el = document.getElementById(id);
-  el.textContent = ''; el.style.display = 'none';
-}
+function showError(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; }
+function hideError(id) { const el = document.getElementById(id); el.textContent = ''; el.style.display = 'none'; }
 
 let toastTimer;
 function showToast(msg, type = 'success') {
@@ -690,12 +674,10 @@ function copyToClipboard(text, label = 'Copied') {
   });
 }
 
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function escAttr(str) {
-  return String(str).replace(/'/g, "\\'");
-}
+function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(str) { return String(str||'').replace(/'/g,"\\'"); }
+
+boot();
 </script>
 </body>
 </html>
