@@ -1,609 +1,464 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D'Studio AR — Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --accent: #c8a96e;
-      --accent-dim: rgba(200,169,110,0.1);
-      --accent-border: rgba(200,169,110,0.25);
-      --bg: #080808;
-      --surface: #101010;
-      --surface2: #161616;
-      --border: #1e1e1e;
-      --text: #efefef;
-      --muted: #555;
-      --danger: #e05555;
-      --success: #4caf50;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); min-height:100vh; }
-
-    #loginSection {
-      display:flex; flex-direction:column; align-items:center;
-      justify-content:center; min-height:100vh; padding:40px 20px;
-      background:radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.06) 0%, transparent 70%);
-    }
-    .login-logo { width:60px; filter:invert(1); opacity:0.85; margin-bottom:18px; }
-    .login-title { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300; letter-spacing:8px; text-transform:uppercase; margin-bottom:6px; }
-    .login-sub { font-size:10px; letter-spacing:4px; color:var(--muted); text-transform:uppercase; margin-bottom:48px; }
-    .login-box { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:36px; width:100%; max-width:420px; }
-    .login-box label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
-    .login-box input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:13px 15px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; outline:none; transition:border-color 0.2s; margin-bottom:16px; }
-    .login-box input:focus { border-color:var(--accent); }
-    .error-msg { color:var(--danger); font-size:12px; text-align:center; margin-bottom:12px; display:none; letter-spacing:1px; }
-
-    .btn-primary { width:100%; padding:15px; background:var(--accent); color:#080808; border:none; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:opacity 0.2s; }
-    .btn-primary:hover { opacity:0.85; }
-    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
-    .btn-secondary { background:transparent; border:1px solid var(--border); color:var(--muted); padding:8px 18px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
-    .btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
-    .btn-danger { background:transparent; border:1px solid rgba(224,85,85,0.3); color:var(--danger); padding:7px 14px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
-    .btn-danger:hover { background:var(--danger); color:white; }
-
-    #dashboard { display:none; }
-    .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,8,8,0.96); backdrop-filter:blur(16px); z-index:100; }
-    .topbar-left { display:flex; align-items:center; gap:14px; }
-    .topbar-logo { width:34px; filter:invert(1); opacity:0.8; }
-    .topbar-title { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; letter-spacing:5px; text-transform:uppercase; }
-    .topbar-right { display:flex; align-items:center; gap:16px; }
-    .badge { font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
-    .badge span { color:var(--accent); }
-
-    .main { max-width:1100px; margin:0 auto; padding:28px 32px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-    @media(max-width:800px) { .main { grid-template-columns:1fr; padding:20px; } .topbar { padding:16px 20px; } }
-
-    .stats-row { grid-column:1/-1; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-    @media(max-width:600px) { .stats-row { grid-template-columns:1fr; } }
-    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px 26px; }
-    .stat-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
-    .stat-value { font-family:'Cormorant Garamond',serif; font-size:40px; font-weight:300; color:var(--accent); line-height:1; }
-
-    .panel { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:28px; }
-    .panel-title { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:var(--accent); margin-bottom:24px; display:flex; align-items:center; gap:12px; }
-    .panel-title::after { content:''; flex:1; height:1px; background:var(--border); }
-    .full-width { grid-column:1/-1; }
-
-    .form-group { margin-bottom:16px; }
-    .form-group label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
-    .form-group input, .form-group textarea {
-      width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px;
-      padding:12px 15px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:border-color 0.2s;
-    }
-    .form-group input:focus, .form-group textarea:focus { border-color:var(--accent); }
-    .form-group textarea { height:75px; resize:none; }
-    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    @media(max-width:500px) { .form-row { grid-template-columns:1fr; } }
-
-    .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid var(--border); margin-top:4px; }
-    .toggle-label { font-size:12px; color:var(--muted); letter-spacing:1px; }
-    .toggle { position:relative; width:44px; height:24px; }
-    .toggle input { opacity:0; width:0; height:0; }
-    .toggle-slider { position:absolute; inset:0; background:var(--border); border-radius:24px; cursor:pointer; transition:0.3s; }
-    .toggle-slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:#555; border-radius:50%; transition:0.3s; }
-    .toggle input:checked + .toggle-slider { background:var(--accent); }
-    .toggle input:checked + .toggle-slider:before { transform:translateX(20px); background:#080808; }
-
-    .success-box { display:none; background:var(--accent-dim); border:1px solid var(--accent-border); border-radius:12px; padding:18px; margin-top:16px; }
-    .success-box p { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
-    .success-link { font-size:12px; color:var(--text); word-break:break-all; display:block; margin-bottom:10px; opacity:0.6; line-height:1.5; }
-
-    .restaurant-item { border:1px solid var(--border); border-radius:14px; margin-bottom:12px; overflow:hidden; }
-    .restaurant-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; cursor:pointer; transition:background 0.2s; gap:12px; }
-    .restaurant-header:hover { background:var(--surface2); }
-    .restaurant-info { flex:1; min-width:0; }
-    .restaurant-name-display { font-size:15px; font-weight:500; margin-bottom:3px; }
-    .restaurant-meta { font-size:11px; color:var(--muted); }
-    .active-badge { font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:3px 10px; border-radius:20px; }
-    .active-badge.active { background:rgba(76,175,80,0.15); color:#4caf50; border:1px solid rgba(76,175,80,0.3); }
-    .active-badge.demo { background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent-border); }
-    .restaurant-actions { display:flex; gap:8px; align-items:center; flex-shrink:0; }
-    .chevron { font-size:12px; color:var(--muted); transition:transform 0.2s; }
-    .chevron.open { transform:rotate(180deg); }
-
-    .dishes-section { display:none; border-top:1px solid var(--border); padding:20px; background:var(--surface2); }
-    .dish-item { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); gap:12px; }
-    .dish-item:last-of-type { border-bottom:none; }
-    .dish-info { flex:1; min-width:0; }
-    .dish-name-display { font-size:14px; font-weight:500; margin-bottom:3px; }
-    .dish-price-display { font-size:12px; color:var(--accent); }
-    .dish-actions { display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
-    .add-dish-btn { margin-top:16px; width:100%; }
-
-    .dish-form { display:none; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-top:16px; }
-    .dish-form .panel-title { margin-bottom:16px; }
-
-    .empty-state { text-align:center; padding:32px 20px; color:var(--muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; }
-    .loading-state { text-align:center; padding:24px; color:var(--muted); font-size:11px; letter-spacing:3px; text-transform:uppercase; }
-
-    .toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--accent-border); border-radius:12px; padding:14px 20px; font-size:13px; color:var(--text); z-index:9999; transform:translateY(100px); opacity:0; transition:all 0.3s; max-width:320px; }
-    .toast.show { transform:translateY(0); opacity:1; }
-    .toast.error { border-color:rgba(224,85,85,0.4); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D'Studio AR - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .auth-section { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; }
+        input, textarea, select { width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        button:hover { transform: translateY(-1px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .section { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .section h2 { color: #1e293b; margin-bottom: 1.5rem; font-size: 1.75rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; font-weight: 600; color: #374151; }
+        tr:hover { background: #f8fafc; }
+        .status { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 600; }
+        .status.admin { background: #10b981; color: white; }
+        .status.owner { background: #f59e0b; color: white; }
+        .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
+        .btn-copy { background: #10b981; }
+        .btn-qr { background: #3b82f6; }
+        .btn-view { background: #8b5cf6; }
+        .btn-delete { background: #ef4444; }
+        .hidden { display: none; }
+        .loading { opacity: 0.7; pointer-events: none; }
+        .error { background: #fee2e2; color: #dc2626; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+        .success { background: #d1fae5; color: #065f46; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+        @media (max-width: 768px) { .container { padding: 1rem; } .actions { flex-direction: column; } }
+    </style>
 </head>
 <body>
-
-<!-- LOGIN -->
-<div id="loginSection">
-  <img src="D_Studio_logo.png" class="login-logo" alt="D'Studio">
-  <h1 class="login-title">D'Studio</h1>
-  <p class="login-sub">AR Management Portal</p>
-  <div class="login-box">
-    <label>Email</label>
-    <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email">
-    <label>Password</label>
-    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
-    <p class="error-msg" id="errorMsg">Incorrect email or password.</p>
-    <button class="btn-primary" id="loginBtn" onclick="login()">Access Dashboard</button>
-  </div>
-</div>
-
-<!-- DASHBOARD -->
-<div id="dashboard">
-  <div class="topbar">
-    <div class="topbar-left">
-      <img src="D_Studio_logo.png" class="topbar-logo" alt="D'Studio">
-      <span class="topbar-title">D'Studio AR</span>
-    </div>
-    <div class="topbar-right">
-      <span class="badge">Active clients: <span id="clientCountBadge">0</span></span>
-      <button class="btn-secondary" onclick="logout()">Logout</button>
-    </div>
-  </div>
-
-  <div class="main">
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Active Clients</div>
-        <div class="stat-value" id="statActive">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">AR Menus Live</div>
-        <div class="stat-value" id="statMenus">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Est. Monthly Revenue</div>
-        <div class="stat-value" id="statRevenue">R0</div>
-      </div>
-    </div>
-
-    <!-- ADD RESTAURANT -->
-    <div class="panel">
-      <div class="panel-title">Add New Restaurant</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Restaurant Name *</label>
-          <input type="text" id="newRestName" placeholder="e.g. Hudson's Burger Co.">
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ D'Studio AR Dashboard</h1>
+            <p>Restaurant AR Menu Platform</p>
         </div>
-        <div class="form-group">
-          <label>Slug * (URL identifier)</label>
-          <input type="text" id="newRestSlug" placeholder="e.g. hudsons-burger">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Client Email *</label>
-          <input type="email" id="newClientEmail" placeholder="owner@restaurant.com">
-        </div>
-        <div class="form-group">
-          <label>Client Password *</label>
-          <input type="password" id="newClientPassword" placeholder="Set their login password">
-        </div>
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">Mark as Active Paying Client</span>
-        <label class="toggle">
-          <input type="checkbox" id="newRestActive">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <button class="btn-primary" id="addRestBtn" onclick="addRestaurant()" style="margin-top:20px;">Add Restaurant</button>
-      <div class="success-box" id="restSuccessBox">
-        <p>Restaurant Added</p>
-        <span class="success-link" id="restSuccessMsg"></span>
-        <button class="btn-secondary" onclick="copyRestLink()">Copy Menu Link</button>
-      </div>
-    </div>
 
-    <!-- WORKFLOW -->
-    <div class="panel">
-      <div class="panel-title">Workflow</div>
-      <div style="display:flex;flex-direction:column;gap:0;">
-        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
-          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 01</div>
-          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Add restaurant + client login</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Enter restaurant details and set client credentials. A Supabase Auth account is created automatically.</div>
-        </div>
-        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
-          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 02</div>
-          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Add their dishes</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Expand the restaurant below and add each dish with its GLB and USDZ model URLs.</div>
-        </div>
-        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
-          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 03</div>
-          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Copy dish AR links</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Each dish gets a unique link. Use it to generate a QR code for the table.</div>
-        </div>
-        <div style="padding:14px 0;">
-          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 04</div>
-          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Client goes live</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Customer scans QR → sees food in AR on table. Client logs into analytics to see engagement data.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CLIENT LIST -->
-    <div class="panel full-width">
-      <div class="panel-title">All Restaurants</div>
-      <div id="restaurantList"><div class="loading-state">Loading...</div></div>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
-
-<script>
-const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
-const EDGE_FN_URL  = 'https://kynmckifaixaakpdarxn.supabase.co/functions/v1/create-client-user';
-
-// Only this user ID can access the dashboard — your admin account
-const ADMIN_USER_ID = 'd22ccb5f-c9d5-47c2-a128-f258468f0cdd';
-
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
-});
-
-let currentSession = null;
-let lastRestLink = '';
-
-function showToast(msg, isError = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast' + (isError ? ' error' : '') + ' show';
-  setTimeout(() => { t.className = 'toast' + (isError ? ' error' : ''); }, 3500);
-}
-
-function showLoginScreen() {
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('loginSection').style.display = 'flex';
-  document.getElementById('loginEmail').value = '';
-  document.getElementById('loginPassword').value = '';
-  document.getElementById('errorMsg').style.display = 'none';
-  currentSession = null;
-}
-
-// ── LOGIN ──
-async function login() {
-  const email    = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const btn      = document.getElementById('loginBtn');
-  const errEl    = document.getElementById('errorMsg');
-
-  errEl.style.display = 'none';
-
-  if (!email || !password) {
-    errEl.textContent = 'Please enter email and password.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  btn.textContent = 'Signing in...';
-  btn.disabled = true;
-
-  try {
-    const { data, error } = await db.auth.signInWithPassword({ email, password });
-
-    if (error || !data.session) {
-      errEl.textContent = 'Incorrect email or password.';
-      errEl.style.display = 'block';
-      return;
-    }
-
-    // Admin-only gate — reject any non-admin account immediately
-    if (data.session.user.id !== ADMIN_USER_ID) {
-      await db.auth.signOut();
-      errEl.textContent = 'Access denied.';
-      errEl.style.display = 'block';
-      return;
-    }
-
-    currentSession = data.session;
-    document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    loadDashboard();
-
-  } catch (e) {
-    errEl.textContent = 'Unexpected error. Please try again.';
-    errEl.style.display = 'block';
-  } finally {
-    btn.textContent = 'Access Dashboard';
-    btn.disabled = false;
-  }
-}
-
-async function logout() {
-  await db.auth.signOut();
-  showLoginScreen();
-}
-
-// ── LOAD DASHBOARD ──
-async function loadDashboard() {
-  const { data, error } = await db
-    .from('restaurants')
-    .select('*, dishes(count)')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    document.getElementById('restaurantList').innerHTML = '<div class="empty-state">Error loading restaurants.</div>';
-    return;
-  }
-
-  const active     = data.filter(r => r.is_active).length;
-  const totalDishes = data.reduce((sum, r) => sum + (r.dishes?.[0]?.count || 0), 0);
-
-  document.getElementById('statActive').textContent       = active;
-  document.getElementById('statMenus').textContent        = totalDishes;
-  document.getElementById('statRevenue').textContent      = 'R' + (active * 800).toLocaleString();
-  document.getElementById('clientCountBadge').textContent = active;
-
-  if (data.length === 0) {
-    document.getElementById('restaurantList').innerHTML = '<div class="empty-state">No restaurants yet — add your first one above.</div>';
-    return;
-  }
-
-  document.getElementById('restaurantList').innerHTML = data.map(r => `
-    <div class="restaurant-item" id="rest-${r.id}">
-      <div class="restaurant-header" onclick="toggleRestaurant('${r.id}')">
-        <div class="restaurant-info">
-          <div class="restaurant-name-display">${r.name}</div>
-          <div class="restaurant-meta">${r.slug} · ${r.client_email || 'No email'}</div>
-        </div>
-        <div class="restaurant-actions">
-          <span class="active-badge ${r.is_active ? 'active' : 'demo'}">${r.is_active ? 'Active' : 'Demo'}</span>
-          <button class="btn-secondary" onclick="event.stopPropagation(); copyMenuLink('${r.slug}')">Menu Link</button>
-          <span class="chevron" id="chevron-${r.id}">▼</span>
-        </div>
-      </div>
-      <div class="dishes-section" id="dishes-${r.id}">
-        <div id="dish-list-${r.id}"><div class="loading-state">Loading dishes...</div></div>
-        <button class="btn-secondary add-dish-btn" onclick="toggleDishForm('${r.id}')">+ Add Dish</button>
-        <div class="dish-form" id="dish-form-${r.id}">
-          <div class="panel-title">New Dish</div>
-          <div class="form-row">
+        <div id="authSection" class="auth-section">
             <div class="form-group">
-              <label>Dish Name *</label>
-              <input type="text" id="dname-${r.id}" placeholder="e.g. Classic Smash">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="admin@dstudioar.com">
             </div>
             <div class="form-group">
-              <label>Price *</label>
-              <input type="text" id="dprice-${r.id}" placeholder="e.g. R 165">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••">
             </div>
-          </div>
-          <div class="form-group">
-            <label>Description</label>
-            <textarea id="ddesc-${r.id}" placeholder="Describe the dish..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>GLB Model URL (Android) *</label>
-            <input type="text" id="dglb-${r.id}" placeholder="https://dstudio-ar.vercel.app/burger.glb">
-          </div>
-          <div class="form-group">
-            <label>USDZ Model URL (iPhone) *</label>
-            <input type="text" id="dusdz-${r.id}" placeholder="https://dstudio-ar.vercel.app/burger.usdz">
-          </div>
-          <div style="display:flex;gap:10px;margin-top:4px;">
-            <button class="btn-primary" onclick="addDish('${r.id}')" style="flex:1;">Save Dish</button>
-            <button class="btn-secondary" onclick="toggleDishForm('${r.id}')">Cancel</button>
-          </div>
+            <button onclick="signIn()">Sign In</button>
+            <div id="authStatus"></div>
         </div>
-      </div>
+
+        <div id="dashboard" class="hidden">
+            <div class="section">
+                <h2>📍 Add Restaurant</h2>
+                <div class="form-group">
+                    <label for="restaurantName">Restaurant Name</label>
+                    <input type="text" id="restaurantName" placeholder="e.g. La Bella Italia">
+                </div>
+                <button onclick="addRestaurant()">Add Restaurant</button>
+                <div id="restaurantStatus"></div>
+            </div>
+
+            <div id="dishesSection" class="section hidden">
+                <h2>🍽️ Add Dish</h2>
+                <select id="restaurantSelect"></select>
+                <div class="form-group">
+                    <label for="dishName">Dish Name</label>
+                    <input type="text" id="dishName" placeholder="e.g. Margherita Pizza">
+                </div>
+                <div class="form-group">
+                    <label for="dishDescription">Description</label>
+                    <textarea id="dishDescription" rows="3" placeholder="Fresh ingredients..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="dishPrice">Price ($)</label>
+                    <input type="number" id="dishPrice" step="0.01" placeholder="19.99">
+                </div>
+                <div class="form-group">
+                    <label for="glbModel">GLB Model URL</label>
+                    <input type="url" id="glbModel" placeholder="https://your-storage.supabase.co/.../pizza.glb">
+                </div>
+                <div class="form-group">
+                    <label for="usdzModel">USDZ Model URL</label>
+                    <input type="url" id="usdzModel" placeholder="https://your-storage.supabase.co/.../pizza.usdz">
+                </div>
+                <button onclick="addDish()">Add Dish</button>
+                <div id="dishStatus"></div>
+            </div>
+
+            <div id="analyticsSection" class="section hidden">
+                <h2>📊 Analytics</h2>
+                <select id="analyticsRestaurantSelect" onchange="loadAnalytics()"></select>
+                <div id="analyticsData"></div>
+            </div>
+        </div>
     </div>
-  `).join('');
-}
 
-// ── ADD RESTAURANT ──
-async function addRestaurant() {
-  const name      = document.getElementById('newRestName').value.trim();
-  const slug      = document.getElementById('newRestSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
-  const email     = document.getElementById('newClientEmail').value.trim();
-  const password  = document.getElementById('newClientPassword').value;
-  const isActive  = document.getElementById('newRestActive').checked;
+    <script>
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  if (!name || !slug || !email || !password) {
-    showToast('Please fill in all required fields.', true);
-    return;
-  }
+        let currentUser = null;
+        let restaurants = [];
 
-  const btn = document.getElementById('addRestBtn');
-  btn.textContent = 'Creating...';
-  btn.disabled = true;
+        async function signIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showStatus('authStatus', 'Please enter email and password', 'error');
+                return;
+            }
 
-  try {
-    const res = await fetch(EDGE_FN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${currentSession.access_token}`
-      },
-      body: JSON.stringify({ email, password })
-    });
+            document.body.classList.add('loading');
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
 
-    const result = await res.json();
+                if (error) throw error;
 
-    if (!res.ok || result.error) {
-      showToast('Error creating client account: ' + (result.error || 'Unknown error'), true);
-      return;
-    }
+                currentUser = data.user;
+                await verifyAdminAccess();
+            } catch (error) {
+                showStatus('authStatus', `Login failed: ${error.message}`, 'error');
+            } finally {
+                document.body.classList.remove('loading');
+            }
+        }
 
-    const { error: restError } = await db.from('restaurants').insert([{
-      name, slug, is_active: isActive,
-      client_email: email,
-      auth_user_id: result.user_id,
-      user_id: currentSession.user.id
-    }]);
+        async function verifyAdminAccess() {
+            // Double-check admin status via RLS
+            const { data: userData } = await supabase
+                .from('restaurants')
+                .select('id')
+                .eq('auth_user_id', currentUser.id)
+                .single();
 
-    if (restError) {
-      showToast('Error saving restaurant: ' + restError.message, true);
-      return;
-    }
+            if (!userData) {
+                showStatus('authStatus', 'Admin access required', 'error');
+                return;
+            }
 
-    lastRestLink = `https://dstudio-ar.vercel.app/menu.html?restaurant=${slug}`;
-    document.getElementById('restSuccessMsg').textContent = lastRestLink;
-    document.getElementById('restSuccessBox').style.display = 'block';
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            await loadRestaurants();
+        }
 
-    document.getElementById('newRestName').value     = '';
-    document.getElementById('newRestSlug').value     = '';
-    document.getElementById('newClientEmail').value  = '';
-    document.getElementById('newClientPassword').value = '';
-    document.getElementById('newRestActive').checked = false;
+        async function loadRestaurants() {
+            const { data, error } = await supabase
+                .from('restaurants')
+                .select('*')
+                .eq('auth_user_id', currentUser.id)
+                .order('name');
 
-    showToast('Restaurant added successfully.');
-    loadDashboard();
+            if (error) {
+                console.error('Load restaurants error:', error);
+                return;
+            }
 
-  } catch (e) {
-    showToast('Unexpected error: ' + e.message, true);
-  } finally {
-    btn.textContent = 'Add Restaurant';
-    btn.disabled = false;
-  }
-}
+            restaurants = data || [];
+            populateRestaurantSelect();
+            loadDishesTable();
+        }
 
-// ── TOGGLE RESTAURANT ──
-function toggleRestaurant(id) {
-  const section = document.getElementById(`dishes-${id}`);
-  const chevron = document.getElementById(`chevron-${id}`);
-  const isOpen  = section.style.display === 'block';
-  section.style.display = isOpen ? 'none' : 'block';
-  chevron.className = 'chevron' + (isOpen ? '' : ' open');
-  if (!isOpen) loadDishes(id);
-}
+        function populateRestaurantSelect() {
+            const select = document.getElementById('restaurantSelect');
+            const analyticsSelect = document.getElementById('analyticsRestaurantSelect');
+            
+            select.innerHTML = '<option value="">Select Restaurant</option>';
+            analyticsSelect.innerHTML = '<option value="">Select Restaurant</option>';
 
-// ── LOAD DISHES ──
-async function loadDishes(restaurantId) {
-  const { data, error } = await db
-    .from('dishes')
-    .select('*')
-    .eq('restaurant_id', restaurantId)
-    .order('created_at', { ascending: true });
+            restaurants.forEach(restaurant => {
+                const option = new Option(restaurant.name, restaurant.id);
+                select.appendChild(option.cloneNode(true));
+                analyticsSelect.appendChild(option.cloneNode(true));
+            });
 
-  const container = document.getElementById(`dish-list-${restaurantId}`);
+            if (restaurants.length > 0) {
+                document.getElementById('dishesSection').classList.remove('hidden');
+                document.getElementById('analyticsSection').classList.remove('hidden');
+            }
+        }
 
-  if (error) { container.innerHTML = '<div class="empty-state">Error loading dishes.</div>'; return; }
-  if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">No dishes yet — add one below.</div>'; return; }
+        async function addRestaurant() {
+            const name = document.getElementById('restaurantName').value.trim();
+            if (!name) return showStatus('restaurantStatus', 'Restaurant name required', 'error');
 
-  container.innerHTML = data.map(d => `
-    <div class="dish-item" id="dish-item-${d.id}">
-      <div class="dish-info">
-        <div class="dish-name-display">${d.dish_name}</div>
-        <div class="dish-price-display">${d.dish_price}</div>
-      </div>
-      <div class="dish-actions">
-        <button class="btn-secondary" onclick="copyDishLink('${d.slug}')">Copy AR Link</button>
-        <button class="btn-danger" onclick="deleteDish('${d.id}', '${restaurantId}')">Delete</button>
-      </div>
-    </div>
-  `).join('');
-}
+            const { error } = await supabase
+                .from('restaurants')
+                .insert({ name, auth_user_id: currentUser.id });
 
-// ── TOGGLE DISH FORM ──
-function toggleDishForm(restaurantId) {
-  const form = document.getElementById(`dish-form-${restaurantId}`);
-  form.style.display = form.style.display === 'block' ? 'none' : 'block';
-}
+            if (error) {
+                showStatus('restaurantStatus', `Error: ${error.message}`, 'error');
+            } else {
+                showStatus('restaurantStatus', 'Restaurant added successfully!', 'success');
+                document.getElementById('restaurantName').value = '';
+                await loadRestaurants();
+            }
+        }
 
-// ── ADD DISH ──
-async function addDish(restaurantId) {
-  const dishName = document.getElementById(`dname-${restaurantId}`).value.trim();
-  const dishPrice = document.getElementById(`dprice-${restaurantId}`).value.trim();
-  const dishDesc  = document.getElementById(`ddesc-${restaurantId}`).value.trim();
-  const modelUrl  = document.getElementById(`dglb-${restaurantId}`).value.trim();
-  const usdzUrl   = document.getElementById(`dusdz-${restaurantId}`).value.trim();
+        async function addDish() {
+            const restaurantId = document.getElementById('restaurantSelect').value;
+            const name = document.getElementById('dishName').value.trim();
+            const description = document.getElementById('dishDescription').value.trim();
+            const price = parseFloat(document.getElementById('dishPrice').value);
+            const glbModel = document.getElementById('glbModel').value.trim();
+            const usdzModel = document.getElementById('usdzModel').value.trim();
 
-  if (!dishName || !dishPrice || !modelUrl || !usdzUrl) {
-    showToast('Please fill in all required dish fields.', true);
-    return;
-  }
+            if (!restaurantId || !name || !price || !glbModel || !usdzModel) {
+                return showStatus('dishStatus', 'All fields required', 'error');
+            }
 
-  const slug = dishName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now();
+            document.body.classList.add('loading');
+            try {
+                // Insert dish first
+                const { data: dish, error: insertError } = await supabase
+                    .from('dishes')
+                    .insert({
+                        restaurant_id: restaurantId,
+                        name,
+                        description,
+                        price,
+                        glb_model: glbModel,
+                        usdz_model: usdzModel
+                    })
+                    .select()
+                    .single();
 
-  const { error } = await db.from('dishes').insert([{
-    restaurant_id: restaurantId,
-    dish_name: dishName,
-    dish_price: dishPrice,
-    dish_description: dishDesc,
-    model_url: modelUrl,
-    usdz_url: usdzUrl,
-    slug
-  }]);
+                if (insertError) throw insertError;
 
-  if (error) { showToast('Error saving dish: ' + error.message, true); return; }
+                // Auto-generate QR code
+                await generateAndStoreQR(dish.id, `https://your-vercel-domain.vercel.app/dish.html?id=${dish.id}`);
 
-  document.getElementById(`dname-${restaurantId}`).value  = '';
-  document.getElementById(`dprice-${restaurantId}`).value = '';
-  document.getElementById(`ddesc-${restaurantId}`).value  = '';
-  document.getElementById(`dglb-${restaurantId}`).value   = '';
-  document.getElementById(`dusdz-${restaurantId}`).value  = '';
+                showStatus('dishStatus', 'Dish added with QR code!', 'success');
+                clearDishForm();
+                await loadDishesTable();
+            } catch (error) {
+                showStatus('dishStatus', `Error: ${error.message}`, 'error');
+            } finally {
+                document.body.classList.remove('loading');
+            }
+        }
 
-  toggleDishForm(restaurantId);
-  loadDishes(restaurantId);
-  loadDashboard();
-  showToast('Dish added successfully.');
-}
+        async function generateAndStoreQR(dishId, arUrl) {
+            return new Promise((resolve, reject) => {
+                const canvas = document.createElement('canvas');
+                QRCode.toCanvas(canvas, arUrl, {
+                    width: 400,
+                    margin: 2,
+                    color: {
+                        dark: '#1e293b',
+                        light: '#ffffff'
+                    }
+                }, (error) => {
+                    if (error) {
+                        console.error('QR generation failed:', error);
+                        reject(error);
+                        return;
+                    }
 
-// ── DELETE DISH ──
-async function deleteDish(dishId, restaurantId) {
-  if (!confirm('Delete this dish? This cannot be undone.')) return;
-  const { error } = await db.from('dishes').delete().eq('id', dishId);
-  if (error) { showToast('Error deleting dish: ' + error.message, true); return; }
-  loadDishes(restaurantId);
-  loadDashboard();
-  showToast('Dish deleted.');
-}
+                    // Convert canvas to base64 PNG
+                    const qrPng = canvas.toDataURL('image/png');
+                    
+                    // Store in database
+                    supabase
+                        .from('dishes')
+                        .update({ 
+                            qr_code_png: qrPng,
+                            qr_created_at: new Date().toISOString()
+                        })
+                        .eq('id', dishId)
+                        .then(resolve)
+                        .catch(reject);
+                });
+            });
+        }
 
-// ── COPY LINKS ──
-function copyMenuLink(slug) {
-  navigator.clipboard.writeText(`https://dstudio-ar.vercel.app/menu.html?restaurant=${slug}`)
-    .then(() => showToast('Menu link copied!'));
-}
+        async function loadDishesTable() {
+            const restaurantId = document.getElementById('restaurantSelect').value;
+            if (!restaurantId) return;
 
-function copyRestLink() {
-  navigator.clipboard.writeText(lastRestLink).then(() => showToast('Menu link copied!'));
-}
+            const { data: dishes, error } = await supabase
+                .from('dishes')
+                .select(`
+                    *,
+                    dish_views(count)
+                `)
+                .eq('restaurant_id', restaurantId)
+                .order('created_at', { ascending: false });
 
-function copyDishLink(dishSlug) {
-  navigator.clipboard.writeText(`https://dstudio-ar.vercel.app/dish.html?slug=${dishSlug}`)
-    .then(() => showToast('AR dish link copied!'));
-}
+            if (error) {
+                console.error('Load dishes error:', error);
+                return;
+            }
 
-// ── ENTER KEY ──
-document.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') login();
-});
+            const tbody = document.getElementById('dishesTableBody');
+            tbody.innerHTML = '';
 
-// ── INIT — check existing session ──
-(async () => {
-  try {
-    const { data } = await db.auth.getSession();
-    if (data.session && data.session.user.id === ADMIN_USER_ID) {
-      currentSession = data.session;
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      loadDashboard();
-    } else if (data.session) {
-      // Someone else's session — sign them out silently
-      await db.auth.signOut();
-    }
-  } catch {
-    // No session — stay on login
-  }
-})();
-</script>
+            (dishes || []).forEach(dish => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${dish.name}</td>
+                    <td>${dish.description}</td>
+                    <td>$${dish.price.toFixed(2)}</td>
+                    <td><a href="${dish.glb_model}" target="_blank">GLB</a></td>
+                    <td><a href="${dish.usdz_model}" target="_blank">USDZ</a></td>
+                    <td>${dish.qr_code_png ? '✅' : '⏳'}</td>
+                    <td>${dish.count || 0}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn-sm btn-view" onclick="viewAR(${dish.id})">View AR</button>
+                            <button class="btn-sm btn-copy" onclick="copyARLink(${dish.id}, '${dish.name}')">Copy Link</button>
+                            ${dish.qr_code_png ? `<button class="btn-sm btn-qr" onclick="downloadQR(${dish.id})">Download QR</button>` : ''}
+                            <button class="btn-sm btn-delete" onclick="deleteDish(${dish.id})">Delete</button>
+                        </div>
+                    </td>
+                `;
+            });
+        }
+
+        function viewAR(dishId) {
+            window.open(`/dish.html?id=${dishId}`, '_blank');
+        }
+
+        async function copyARLink(dishId, dishName) {
+            const arUrl = `${window.location.origin}/dish.html?id=${dishId}`;
+            try {
+                await navigator.clipboard.writeText(arUrl);
+                alert(`AR Link copied: ${dishName}`);
+            } catch {
+                // Fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = arUrl;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert(`AR Link copied: ${dishName}`);
+            }
+        }
+
+        async function downloadQR(dishId) {
+            const { data: dish } = await supabase
+                .from('dishes')
+                .select('qr_code_png, name')
+                .eq('id', dishId)
+                .single();
+
+            if (!dish?.qr_code_png) return;
+
+            const link = document.createElement('a');
+            link.download = `${dish.name.replace(/[^a-z0-9]/gi, '_')}_QR.png`;
+            link.href = dish.qr_code_png;
+            link.click();
+        }
+
+        async function deleteDish(dishId) {
+            if (!confirm('Delete this dish?')) return;
+
+            const { error } = await supabase
+                .from('dishes')
+                .delete()
+                .eq('id', dishId);
+
+            if (error) {
+                alert(`Error: ${error.message}`);
+            } else {
+                await loadDishesTable();
+            }
+        }
+
+        async function loadAnalytics() {
+            const restaurantId = document.getElementById('analyticsRestaurantSelect').value;
+            if (!restaurantId) return;
+
+            const { data: analytics } = await supabase
+                .from('dish_views')
+                .select(`
+                    dish_id,
+                    dish:dishes(name),
+                    count,
+                    created_at
+                `)
+                .eq('restaurant_id', restaurantId)
+                .order('count', { ascending: false });
+
+            document.getElementById('analyticsData').innerHTML = `
+                <table>
+                    <thead>
+                        <tr><th>Dish</th><th>Views</th><th>Last Viewed</th></tr>
+                    </thead>
+                    <tbody>
+                        ${analytics?.map(a => `
+                            <tr>
+                                <td>${a.dish?.name || 'Unknown'}</td>
+                                <td>${a.count}</td>
+                                <td>${new Date(a.created_at).toLocaleDateString()}</td>
+                            </tr>
+                        `).join('') || '<tr><td colspan="3">No data</td></tr>'}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function clearDishForm() {
+            document.getElementById('dishName').value = '';
+            document.getElementById('dishDescription').value = '';
+            document.getElementById('dishPrice').value = '';
+            document.getElementById('glbModel').value = '';
+            document.getElementById('usdzModel').value = '';
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => element.innerHTML = '', 5000);
+        }
+
+        // Auto-load dishes when restaurant changes
+        document.getElementById('restaurantSelect').addEventListener('change', loadDishesTable);
+    </script>
+
+    <!-- Add dishes table template -->
+    <script>
+        // Inject dishes table after dashboard loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const dishesSection = document.querySelector('#dishesSection');
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>GLB</th>
+                        <th>USDZ</th>
+                        <th>QR</th>
+                        <th>Views</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="dishesTableBody"></tbody>
+            `;
+            dishesSection.appendChild(table);
+        });
+    </script>
 </body>
 </html>
