@@ -520,6 +520,9 @@ document.addEventListener('keypress', function(e) {
       if (restaurant) {
         currentRestaurant = restaurant;
         showAnalytics();
+      } else {
+        // Session exists but doesn't match this restaurant — sign out cleanly
+        await db.auth.signOut();
       }
     }
   } catch {
