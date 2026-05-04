@@ -179,16 +179,23 @@ async function login() {
     return;
   }
 
-  // Verify this user owns this restaurant
+  // Fetch restaurant by slug then verify ownership in code
   const slug = getRestaurantSlug();
   const { data: restData, error: restError } = await db
     .from('restaurants')
     .select('*')
     .eq('slug', slug)
-    .eq('auth_user_id', data.session.user.id)
     .single();
 
   if (restError || !restData) {
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('errorMsg').textContent = 'Restaurant not found.';
+    await db.auth.signOut();
+    return;
+  }
+
+  // Verify ownership in code
+  if (restData.auth_user_id !== data.session.user.id) {
     document.getElementById('errorMsg').style.display = 'block';
     document.getElementById('errorMsg').textContent = 'Access denied for this restaurant.';
     await db.auth.signOut();
@@ -484,10 +491,9 @@ document.addEventListener('keypress', function(e) {
       .from('restaurants')
       .select('*')
       .eq('slug', slug)
-      .eq('auth_user_id', data.session.user.id)
       .single();
 
-    if (restData) {
+    if (restData && restData.auth_user_id === data.session.user.id) {
       currentRestaurant = restData;
       showAnalytics();
     }
