@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>D'Studio AR — Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -44,6 +45,23 @@
     .btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
     .btn-danger { background:transparent; border:1px solid rgba(224,85,85,0.3); color:var(--danger); padding:7px 14px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
     .btn-danger:hover { background:var(--danger); color:white; }
+    /* QR button — accent-tinted variant, visually distinct from Copy/Delete */
+    .btn-qr {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+      padding: 7px 14px;
+      border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-qr:hover { background: var(--accent); color: #080808; }
+    .btn-qr:disabled { opacity: 0.4; cursor: not-allowed; }
 
     #dashboard { display:none; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,8,8,0.96); backdrop-filter:blur(16px); z-index:100; }
@@ -225,8 +243,8 @@
         </div>
         <div style="padding:14px 0;border-bottom:1px solid var(--border);">
           <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 03</div>
-          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Copy dish AR links</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Each dish gets a unique link. Use it to generate a QR code for the table.</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Download dish QR codes</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Each dish gets a unique QR code. Download as PNG and hand it to the client for table placement.</div>
         </div>
         <div style="padding:14px 0;">
           <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 04</div>
@@ -251,6 +269,7 @@
 const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
 const EDGE_FN_URL  = 'https://kynmckifaixaakpdarxn.supabase.co/functions/v1/create-client-user';
+const AR_BASE_URL  = 'https://dstudio-ar.vercel.app';
 
 // Only this user ID can access the dashboard — your admin account
 const ADMIN_USER_ID = 'd22ccb5f-c9d5-47c2-a128-f258468f0cdd';
@@ -345,7 +364,7 @@ async function loadDashboard() {
     return;
   }
 
-  const active     = data.filter(r => r.is_active).length;
+  const active      = data.filter(r => r.is_active).length;
   const totalDishes = data.reduce((sum, r) => sum + (r.dishes?.[0]?.count || 0), 0);
 
   document.getElementById('statActive').textContent       = active;
@@ -410,11 +429,11 @@ async function loadDashboard() {
 
 // ── ADD RESTAURANT ──
 async function addRestaurant() {
-  const name      = document.getElementById('newRestName').value.trim();
-  const slug      = document.getElementById('newRestSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
-  const email     = document.getElementById('newClientEmail').value.trim();
-  const password  = document.getElementById('newClientPassword').value;
-  const isActive  = document.getElementById('newRestActive').checked;
+  const name     = document.getElementById('newRestName').value.trim();
+  const slug     = document.getElementById('newRestSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
+  const email    = document.getElementById('newClientEmail').value.trim();
+  const password = document.getElementById('newClientPassword').value;
+  const isActive = document.getElementById('newRestActive').checked;
 
   if (!name || !slug || !email || !password) {
     showToast('Please fill in all required fields.', true);
@@ -454,15 +473,15 @@ async function addRestaurant() {
       return;
     }
 
-    lastRestLink = `https://dstudio-ar.vercel.app/menu.html?restaurant=${slug}`;
+    lastRestLink = `${AR_BASE_URL}/menu.html?restaurant=${slug}`;
     document.getElementById('restSuccessMsg').textContent = lastRestLink;
     document.getElementById('restSuccessBox').style.display = 'block';
 
-    document.getElementById('newRestName').value     = '';
-    document.getElementById('newRestSlug').value     = '';
-    document.getElementById('newClientEmail').value  = '';
+    document.getElementById('newRestName').value      = '';
+    document.getElementById('newRestSlug').value      = '';
+    document.getElementById('newClientEmail').value   = '';
     document.getElementById('newClientPassword').value = '';
-    document.getElementById('newRestActive').checked = false;
+    document.getElementById('newRestActive').checked  = false;
 
     showToast('Restaurant added successfully.');
     loadDashboard();
@@ -506,10 +525,66 @@ async function loadDishes(restaurantId) {
       </div>
       <div class="dish-actions">
         <button class="btn-secondary" onclick="copyDishLink('${d.slug}')">Copy AR Link</button>
+        <button class="btn-qr" id="qr-btn-${d.id}" onclick="downloadQR('${d.slug}', '${escapeDishName(d.dish_name)}', '${d.id}')">Download QR</button>
         <button class="btn-danger" onclick="deleteDish('${d.id}', '${restaurantId}')">Delete</button>
       </div>
     </div>
   `).join('');
+}
+
+// ── QR CODE GENERATION & DOWNLOAD ──
+//
+// Strategy: use QRCode.toCanvas() to render into an offscreen canvas,
+// then export that canvas as a PNG data URL and trigger a download.
+// We do NOT inject a canvas into the DOM — no visual flicker, no layout shift.
+// Error correction level H (30%) gives best scan reliability for print/laminate use.
+//
+async function downloadQR(dishSlug, dishName, dishId) {
+  const arUrl = `${AR_BASE_URL}/dish.html?slug=${dishSlug}`;
+  const btn   = document.getElementById(`qr-btn-${dishId}`);
+
+  btn.textContent = 'Generating...';
+  btn.disabled    = true;
+
+  try {
+    // Offscreen canvas — never appended to DOM
+    const canvas = document.createElement('canvas');
+
+    await QRCode.toCanvas(canvas, arUrl, {
+      width: 512,          // 512×512 px — sharp at print sizes up to ~5cm
+      margin: 2,           // quiet zone in modules (spec minimum is 4, 2 works for digital)
+      color: {
+        dark:  '#000000',  // solid black for maximum scanner contrast
+        light: '#ffffff'
+      },
+      errorCorrectionLevel: 'H'  // highest — survives logo overlays, minor damage
+    });
+
+    // Export canvas → PNG data URL → trigger download
+    const dataUrl  = canvas.toDataURL('image/png');
+    const link     = document.createElement('a');
+    link.href      = dataUrl;
+    // Filename: sanitised dish name, no spaces, lowercase — safe across all OS
+    link.download  = `qr-${dishName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`;
+    link.click();
+
+    showToast(`QR downloaded for ${dishName}`);
+
+  } catch (err) {
+    showToast('QR generation failed: ' + err.message, true);
+  } finally {
+    btn.textContent = 'Download QR';
+    btn.disabled    = false;
+  }
+}
+
+// Safely escape dish names for inline HTML attribute use
+// Prevents broken onclick if dish name contains quotes or special chars
+function escapeDishName(name) {
+  return name
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;');
 }
 
 // ── TOGGLE DISH FORM ──
@@ -520,7 +595,7 @@ function toggleDishForm(restaurantId) {
 
 // ── ADD DISH ──
 async function addDish(restaurantId) {
-  const dishName = document.getElementById(`dname-${restaurantId}`).value.trim();
+  const dishName  = document.getElementById(`dname-${restaurantId}`).value.trim();
   const dishPrice = document.getElementById(`dprice-${restaurantId}`).value.trim();
   const dishDesc  = document.getElementById(`ddesc-${restaurantId}`).value.trim();
   const modelUrl  = document.getElementById(`dglb-${restaurantId}`).value.trim();
@@ -535,11 +610,11 @@ async function addDish(restaurantId) {
 
   const { error } = await db.from('dishes').insert([{
     restaurant_id: restaurantId,
-    dish_name: dishName,
-    dish_price: dishPrice,
+    dish_name:     dishName,
+    dish_price:    dishPrice,
     dish_description: dishDesc,
-    model_url: modelUrl,
-    usdz_url: usdzUrl,
+    model_url:     modelUrl,
+    usdz_url:      usdzUrl,
     slug
   }]);
 
@@ -554,7 +629,7 @@ async function addDish(restaurantId) {
   toggleDishForm(restaurantId);
   loadDishes(restaurantId);
   loadDashboard();
-  showToast('Dish added successfully.');
+  showToast('Dish added. Click "Download QR" to get its QR code.');
 }
 
 // ── DELETE DISH ──
@@ -569,7 +644,7 @@ async function deleteDish(dishId, restaurantId) {
 
 // ── COPY LINKS ──
 function copyMenuLink(slug) {
-  navigator.clipboard.writeText(`https://dstudio-ar.vercel.app/menu.html?restaurant=${slug}`)
+  navigator.clipboard.writeText(`${AR_BASE_URL}/menu.html?restaurant=${slug}`)
     .then(() => showToast('Menu link copied!'));
 }
 
@@ -578,7 +653,7 @@ function copyRestLink() {
 }
 
 function copyDishLink(dishSlug) {
-  navigator.clipboard.writeText(`https://dstudio-ar.vercel.app/dish.html?slug=${dishSlug}`)
+  navigator.clipboard.writeText(`${AR_BASE_URL}/dish.html?slug=${dishSlug}`)
     .then(() => showToast('AR dish link copied!'));
 }
 
