@@ -146,8 +146,8 @@
   <div class="model-container" id="model-container"></div>
 
   <div class="dish-info">
-    <div class="dish-name"     id="dish-name"></div>
-    <div class="dish-price"    id="dish-price"></div>
+    <div class="dish-name"        id="dish-name"></div>
+    <div class="dish-price"       id="dish-price"></div>
     <div class="dish-description" id="dish-description"></div>
   </div>
 
@@ -183,26 +183,16 @@ function detectDevice() {
 
 // ─────────────────────────────────────────────
 // VIEW LOGGING — abuse prevention
-//
-// Strategy: one view per dish per device per day.
-// We store a fingerprint key in sessionStorage:
-//   key:   "dv_{dishId}_{YYYY-MM-DD}"
-//   value: "1"
-//
-// sessionStorage clears when the browser tab closes —
-// so a genuine new visit the next day logs correctly.
-// Refreshes and back-navigation within the same session
-// do NOT generate duplicate view events.
-//
-// We also never let view logging errors reach the user —
-// the AR experience must never be interrupted by analytics.
+// One view per dish per device per day per session.
+// sessionStorage clears on tab close — genuine new
+// visits the next day log correctly.
+// Analytics errors never interrupt the AR experience.
 // ─────────────────────────────────────────────
 async function logView(dishId, restaurantId) {
   try {
-    const today     = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const cacheKey  = `dv_${dishId}_${today}`;
+    const today    = new Date().toISOString().split('T')[0];
+    const cacheKey = `dv_${dishId}_${today}`;
 
-    // Already logged this dish today in this browser session — skip
     if (sessionStorage.getItem(cacheKey)) return;
 
     const { error } = await db.from('dish_views').insert({
@@ -212,10 +202,7 @@ async function logView(dishId, restaurantId) {
       viewed_at:     new Date().toISOString()
     });
 
-    // Only mark as logged if the insert actually succeeded
-    if (!error) {
-      sessionStorage.setItem(cacheKey, '1');
-    }
+    if (!error) sessionStorage.setItem(cacheKey, '1');
   } catch (_) {
     // Silent — analytics must never block the AR experience
   }
@@ -223,7 +210,6 @@ async function logView(dishId, restaurantId) {
 
 // ─────────────────────────────────────────────
 // SAFE HTML ESCAPING
-// Used for any dish data inserted into innerHTML
 // ─────────────────────────────────────────────
 function escHtml(str) {
   return String(str || '')
@@ -236,26 +222,20 @@ function escHtml(str) {
 
 // ─────────────────────────────────────────────
 // INIT
-//
-// URL format produced by dashboard QR codes:
-//   dish.html?slug={dish-slug}
-//
-// The dish slug is globally unique (slug + timestamp),
-// so we only need one param to find the dish and its restaurant.
+// URL format: dish.html?slug={dish-slug}
+// Dish slug is globally unique — one param is enough.
 // ─────────────────────────────────────────────
 async function init() {
-  const params    = new URLSearchParams(window.location.search);
-  const dishSlug  = params.get('slug');
+  const params   = new URLSearchParams(window.location.search);
+  const dishSlug = params.get('slug');
 
-  // No slug — nothing to load
   if (!dishSlug || dishSlug.trim() === '') return showError();
 
-  // Basic slug validation — only allow safe characters
-  // Prevents injection attempts via URL manipulation
+  // Slug validation — only safe characters, prevent injection
   if (!/^[a-z0-9-]+$/i.test(dishSlug) || dishSlug.length > 120) return showError();
 
   try {
-    // Fetch dish by slug — join restaurant in same query to avoid waterfall
+    // Fetch dish + join restaurant in single query — no waterfall
     const { data: dish, error: dishErr } = await db
       .from('dishes')
       .select('*, restaurants(id, name, slug)')
@@ -284,11 +264,11 @@ function renderDish(restaurant, dish) {
   // Page title
   document.title = `${dish.dish_name} — ${restaurant.name}`;
 
-  // Back link — uses restaurant slug from the joined data
+  // Back link
   document.getElementById('back-link').href =
     `menu.html?restaurant=${encodeURIComponent(restaurant.slug)}`;
 
-  // Dish text — use textContent for name/price/desc (safest, no XSS risk)
+  // Dish text — textContent only, no XSS risk
   document.getElementById('dish-name').textContent  = dish.dish_name  || '';
   document.getElementById('dish-price').textContent = dish.dish_price || '';
 
@@ -299,8 +279,9 @@ function renderDish(restaurant, dish) {
     descEl.style.display = 'none';
   }
 
-  // 3D model viewer
+  // ── 3D MODEL VIEWER ──
   const modelContainer = document.getElementById('model-container');
+
   if (dish.model_url) {
     const mv = document.createElement('model-viewer');
     mv.setAttribute('src',              dish.model_url);
@@ -309,9 +290,11 @@ function renderDish(restaurant, dish) {
     mv.setAttribute('camera-controls', '');
     mv.setAttribute('shadow-intensity', '1');
     mv.setAttribute('exposure',         '0.9');
+    mv.setAttribute('ar',               '');
+    mv.setAttribute('ar-modes',         'scene-viewer webxr quick-look');
+    mv.setAttribute('ar-scale',         'auto');
     mv.setAttribute('style',            'width:100%;height:100%;background:transparent;');
 
-    // ios-src only if USDZ URL exists
     if (dish.usdz_url) mv.setAttribute('ios-src', dish.usdz_url);
 
     modelContainer.appendChild(mv);
@@ -326,7 +309,7 @@ function renderDish(restaurant, dish) {
       </div>`;
   }
 
-  // AR button — device-aware
+  // ── AR BUTTON — device aware ──
   const device    = detectDevice();
   const arSection = document.getElementById('ar-section');
   const arIcon    = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -337,7 +320,6 @@ function renderDish(restaurant, dish) {
   if (dish.model_url) {
     if (device === 'ios' && dish.usdz_url) {
       // iPhone: native Quick Look via <a rel="ar">
-      // href must be set as attribute — escHtml protects against injection
       arSection.innerHTML = `
         <a class="ar-btn" href="${escHtml(dish.usdz_url)}" rel="ar">
           ${arIcon}
@@ -345,8 +327,8 @@ function renderDish(restaurant, dish) {
         </a>
         <div class="ar-note">Opens in Apple AR — point your camera at a flat surface</div>`;
 
-    } else if (device === 'android' || device === 'unknown') {
-      // Android / desktop: trigger model-viewer AR mode
+    } else {
+      // Android + desktop: trigger model-viewer Scene Viewer
       arSection.innerHTML = `
         <button class="ar-btn" id="ar-trigger-btn">
           ${arIcon}
