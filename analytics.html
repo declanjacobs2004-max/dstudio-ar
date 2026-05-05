@@ -22,15 +22,6 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); min-height:100vh; }
 
-    #debugBox {
-      display:none;
-      position:fixed; bottom:0; left:0; right:0;
-      background:#1a0000; border-top:2px solid #e05555;
-      padding:16px; font-family:monospace; font-size:11px;
-      color:#ff9999; z-index:9999; max-height:40vh; overflow-y:auto;
-      white-space:pre-wrap; word-break:break-all;
-    }
-
     #loginSection {
       display:flex; flex-direction:column; align-items:center;
       justify-content:center; min-height:100vh; padding:40px 20px;
@@ -95,8 +86,6 @@
 </head>
 <body>
 
-<!-- ON-SCREEN DEBUG — visible without devtools, auto-removed after fix -->
-<div id="debugBox"></div>
 
 <!-- LOGIN -->
 <div id="loginSection">
@@ -152,14 +141,6 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 let currentRestaurant = null;
 let chartInstances    = {};
 
-// ─────────────────────────────────────────────
-// ON-SCREEN DEBUG
-// ─────────────────────────────────────────────
-function dbg(msg) {
-  const box = document.getElementById('debugBox');
-  box.style.display = 'block';
-  box.textContent += '\n' + msg;
-}
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -241,14 +222,10 @@ async function login() {
     // STEP 1 — authenticate
     const { data: authData, error: authError } =
       await db.auth.signInWithPassword({ email, password });
-
-    dbg('STEP 1 — signInWithPassword');
     dbg('authError: ' + JSON.stringify(authError));
-    dbg('session exists: ' + !!authData?.session);
 
     if (authError || !authData?.session) {
       showError('Incorrect email or password.');
-      dbg('FAILED at step 1');
       return;
     }
 
@@ -261,48 +238,34 @@ async function login() {
     const userId = authData.session.user.id;
     const slug   = getRestaurantSlug();
 
-    dbg('STEP 2 — session set');
-    dbg('userId from session: [' + userId + ']');
-    dbg('slug from URL: [' + slug + ']');
-
     // STEP 3 — fetch restaurant
     const { data: restData, error: restError } = await db
       .from('restaurants')
       .select('*')
       .eq('slug', slug)
       .single();
-
-    dbg('STEP 3 — restaurant query');
     dbg('restError: ' + JSON.stringify(restError));
     dbg('auth_user_id in DB: [' + (restData ? restData.auth_user_id : 'null') + ']');
 
     if (restError || !restData) {
       showError('Restaurant not found.');
-      dbg('FAILED at step 3 — restaurant not found');
       await db.auth.signOut();
       return;
     }
 
     // STEP 4 — ownership check
-    dbg('STEP 4 — ownership check');
-    dbg('DB auth_user_id : [' + restData.auth_user_id + ']');
-    dbg('session userId  : [' + userId + ']');
     dbg('MATCH: ' + (restData.auth_user_id === userId));
 
     if (restData.auth_user_id !== userId) {
       showError('Access denied. You do not own this restaurant.');
-      dbg('FAILED at step 4 — IDs do not match');
       await db.auth.signOut();
       return;
     }
-
-    dbg('SUCCESS — loading analytics');
     currentRestaurant = restData;
     showAnalytics();
 
   } catch (e) {
     showError('Something went wrong. Please try again.');
-    dbg('EXCEPTION: ' + e.message);
   } finally {
     btn.textContent = 'View Analytics';
     btn.disabled    = false;
@@ -321,8 +284,7 @@ async function logout() {
   document.getElementById('loginSection').style.display     = 'flex';
   document.getElementById('loginEmail').value    = '';
   document.getElementById('loginPassword').value = '';
-  document.getElementById('debugBox').textContent   = '';
-  document.getElementById('debugBox').style.display = 'none';
+
   hideError();
 }
 
@@ -419,7 +381,6 @@ async function loadAnalytics() {
     });
 
   } catch (e) {
-    dbg('loadAnalytics error: ' + e.message);
     document.getElementById('analyticsContent').innerHTML =
       `<div class="empty-state">Error loading analytics: ${e.message}</div>`;
   }
@@ -621,7 +582,6 @@ document.addEventListener('keypress', function(e) {
       }
     }
   } catch (e) {
-    dbg('Session restore error: ' + e.message);
   }
 })();
 </script>
