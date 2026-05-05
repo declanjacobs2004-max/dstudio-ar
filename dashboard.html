@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>D'Studio AR — Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
@@ -819,9 +820,20 @@ async function deleteDish(dishId, restaurantId) {
 }
 
 // ─────────────────────────────────────────────
-// QR CODE GENERATION & DOWNLOAD
-// Uses Google Charts API — no JS library required
+// QR CODE — pure client-side, no CDN, no fetch
+// Uses qrcode-generator loaded once on demand
 // ─────────────────────────────────────────────
+function loadQRLib() {
+  return new Promise((resolve, reject) => {
+    if (window.qrcode) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
 async function downloadQR(dishSlug, dishName, dishId) {
   const arUrl    = `${AR_BASE_URL}/dish.html?slug=${dishSlug}`;
   const btn      = document.getElementById(`qr-btn-${dishId}`);
@@ -831,20 +843,39 @@ async function downloadQR(dishSlug, dishName, dishId) {
   btn.disabled    = true;
 
   try {
-    const qrApiUrl = `https://chart.googleapis.com/chart?cht=qr&chs=512x512&chl=${encodeURIComponent(arUrl)}&choe=UTF-8&chld=H|2`;
+    // Render QR into a hidden div using QRCodeJS
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:512px;height:512px;';
+    document.body.appendChild(container);
 
-    const response = await fetch(qrApiUrl);
-    if (!response.ok) throw new Error('QR API request failed');
+    await new Promise((resolve, reject) => {
+      try {
+        const qr = new QRCode(container, {
+          text:           arUrl,
+          width:          512,
+          height:         512,
+          colorDark:      '#000000',
+          colorLight:     '#ffffff',
+          correctLevel:   QRCode.CorrectLevel.H
+        });
+        // QRCodeJS renders synchronously but appends an img — wait one tick
+        setTimeout(resolve, 100);
+      } catch(e) { reject(e); }
+    });
 
-    const blob      = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const link      = document.createElement('a');
-    link.href       = objectUrl;
-    link.download   = `qr-${safeName}.png`;
+    // Grab the canvas QRCodeJS created
+    const canvas = container.querySelector('canvas');
+    if (!canvas) throw new Error('Canvas not found in QR container');
+
+    const dataUrl = canvas.toDataURL('image/png');
+    document.body.removeChild(container);
+
+    const link   = document.createElement('a');
+    link.href     = dataUrl;
+    link.download = `qr-${safeName}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 
     showToast(`QR downloaded for ${dishName}`);
   } catch (err) {
