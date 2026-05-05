@@ -24,6 +24,7 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); min-height:100vh; }
 
+    /* ── LOGIN ── */
     #loginSection {
       display:flex; flex-direction:column; align-items:center;
       justify-content:center; min-height:100vh; padding:40px 20px;
@@ -38,6 +39,7 @@
     .login-box input:focus { border-color:var(--accent); }
     .error-msg { color:var(--danger); font-size:12px; text-align:center; margin-bottom:12px; display:none; letter-spacing:1px; }
 
+    /* ── BUTTONS ── */
     .btn-primary { width:100%; padding:15px; background:var(--accent); color:#080808; border:none; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:opacity 0.2s; }
     .btn-primary:hover { opacity:0.85; }
     .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
@@ -45,24 +47,11 @@
     .btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
     .btn-danger { background:transparent; border:1px solid rgba(224,85,85,0.3); color:var(--danger); padding:7px 14px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
     .btn-danger:hover { background:var(--danger); color:white; }
-    /* QR button — accent-tinted variant, visually distinct from Copy/Delete */
-    .btn-qr {
-      background: var(--accent-dim);
-      border: 1px solid var(--accent-border);
-      color: var(--accent);
-      padding: 7px 14px;
-      border-radius: 50px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .btn-qr:hover { background: var(--accent); color: #080808; }
-    .btn-qr:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-qr { background:var(--accent-dim); border:1px solid var(--accent-border); color:var(--accent); padding:7px 14px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+    .btn-qr:hover { background:var(--accent); color:#080808; }
+    .btn-qr:disabled { opacity:0.4; cursor:not-allowed; }
 
+    /* ── DASHBOARD LAYOUT ── */
     #dashboard { display:none; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,8,8,0.96); backdrop-filter:blur(16px); z-index:100; }
     .topbar-left { display:flex; align-items:center; gap:14px; }
@@ -86,6 +75,7 @@
     .panel-title::after { content:''; flex:1; height:1px; background:var(--border); }
     .full-width { grid-column:1/-1; }
 
+    /* ── FORMS ── */
     .form-group { margin-bottom:16px; }
     .form-group label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
     .form-group input, .form-group textarea {
@@ -97,6 +87,29 @@
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     @media(max-width:500px) { .form-row { grid-template-columns:1fr; } }
 
+    /* ── FILE UPLOAD ── */
+    .file-upload-area {
+      border:1px dashed var(--border); border-radius:10px; padding:18px;
+      background:var(--surface2); cursor:pointer; transition:all 0.2s;
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      position:relative; overflow:hidden;
+    }
+    .file-upload-area:hover { border-color:var(--accent); background:var(--accent-dim); }
+    .file-upload-area.has-file { border-color:var(--accent); border-style:solid; }
+    .file-upload-area.uploading { pointer-events:none; opacity:0.7; }
+    .file-upload-area input[type="file"] {
+      position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+    }
+    .file-upload-icon { font-size:20px; line-height:1; }
+    .file-upload-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+    .file-upload-name { font-size:11px; color:var(--accent); font-weight:500; text-align:center; word-break:break-all; }
+    .file-upload-hint { font-size:10px; color:var(--muted); }
+
+    /* ── PROGRESS BAR ── */
+    .upload-progress { height:3px; background:var(--border); border-radius:3px; margin-top:8px; overflow:hidden; display:none; }
+    .upload-progress-bar { height:100%; background:var(--accent); border-radius:3px; width:0%; transition:width 0.3s ease; }
+
+    /* ── TOGGLES ── */
     .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid var(--border); margin-top:4px; }
     .toggle-label { font-size:12px; color:var(--muted); letter-spacing:1px; }
     .toggle { position:relative; width:44px; height:24px; }
@@ -110,6 +123,7 @@
     .success-box p { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
     .success-link { font-size:12px; color:var(--text); word-break:break-all; display:block; margin-bottom:10px; opacity:0.6; line-height:1.5; }
 
+    /* ── RESTAURANT LIST ── */
     .restaurant-item { border:1px solid var(--border); border-radius:14px; margin-bottom:12px; overflow:hidden; }
     .restaurant-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; cursor:pointer; transition:background 0.2s; gap:12px; }
     .restaurant-header:hover { background:var(--surface2); }
@@ -138,6 +152,7 @@
     .empty-state { text-align:center; padding:32px 20px; color:var(--muted); font-size:11px; letter-spacing:2px; text-transform:uppercase; }
     .loading-state { text-align:center; padding:24px; color:var(--muted); font-size:11px; letter-spacing:3px; text-transform:uppercase; }
 
+    /* ── TOAST ── */
     .toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--accent-border); border-radius:12px; padding:14px 20px; font-size:13px; color:var(--text); z-index:9999; transform:translateY(100px); opacity:0; transition:all 0.3s; max-width:320px; }
     .toast.show { transform:translateY(0); opacity:1; }
     .toast.error { border-color:rgba(224,85,85,0.4); }
@@ -195,21 +210,21 @@
       <div class="form-row">
         <div class="form-group">
           <label>Restaurant Name *</label>
-          <input type="text" id="newRestName" placeholder="e.g. Hudson's Burger Co.">
+          <input type="text" id="newRestName" placeholder="e.g. Hudson's Burger Co." maxlength="100">
         </div>
         <div class="form-group">
           <label>Slug * (URL identifier)</label>
-          <input type="text" id="newRestSlug" placeholder="e.g. hudsons-burger">
+          <input type="text" id="newRestSlug" placeholder="e.g. hudsons-burger" maxlength="60">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Client Email *</label>
-          <input type="email" id="newClientEmail" placeholder="owner@restaurant.com">
+          <input type="email" id="newClientEmail" placeholder="owner@restaurant.com" maxlength="200">
         </div>
         <div class="form-group">
           <label>Client Password *</label>
-          <input type="password" id="newClientPassword" placeholder="Set their login password">
+          <input type="password" id="newClientPassword" placeholder="Set their login password" maxlength="128">
         </div>
       </div>
       <div class="toggle-row">
@@ -238,8 +253,8 @@
         </div>
         <div style="padding:14px 0;border-bottom:1px solid var(--border);">
           <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 02</div>
-          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Add their dishes</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Expand the restaurant below and add each dish with its GLB and USDZ model URLs.</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Upload dish 3D models</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Expand the restaurant below, add each dish and upload the GLB (Android) and USDZ (iPhone) files directly. No URL needed.</div>
         </div>
         <div style="padding:14px 0;border-bottom:1px solid var(--border);">
           <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 03</div>
@@ -249,7 +264,7 @@
         <div style="padding:14px 0;">
           <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Step 04</div>
           <div style="font-size:14px;font-weight:500;margin-bottom:3px;">Client goes live</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Customer scans QR → sees food in AR on table. Client logs into analytics to see engagement data.</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Customer scans QR → sees food in AR. Client logs into analytics to track engagement.</div>
         </div>
       </div>
     </div>
@@ -266,13 +281,22 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
-const EDGE_FN_URL  = 'https://kynmckifaixaakpdarxn.supabase.co/functions/v1/create-client-user';
-const AR_BASE_URL  = 'https://dstudio-ar.vercel.app';
+// ─────────────────────────────────────────────
+// CONFIGURATION
+// ─────────────────────────────────────────────
+const SUPABASE_URL  = 'https://kynmckifaixaakpdarxn.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5bm1ja2lmYWl4YWFrcGRhcnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjkzNDIsImV4cCI6MjA5MzQwNTM0Mn0.wNncRxFWqn7tVcRJzdG1x6AmvB3k5e6DQamRgXPG7ik';
+const EDGE_FN_URL   = 'https://kynmckifaixaakpdarxn.supabase.co/functions/v1/create-client-user';
+const AR_BASE_URL   = 'https://dstudio-ar.vercel.app';
+const STORAGE_BUCKET = 'models';
 
-// Only this user ID can access the dashboard — your admin account
+// Admin gate — only this Supabase user ID can access the dashboard
 const ADMIN_USER_ID = 'd22ccb5f-c9d5-47c2-a128-f258468f0cdd';
+
+// File validation
+const ALLOWED_GLB_TYPES   = ['.glb'];
+const ALLOWED_USDZ_TYPES  = ['.usdz'];
+const MAX_FILE_SIZE_BYTES  = 50 * 1024 * 1024; // 50 MB hard cap per file
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -280,8 +304,11 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 let currentSession = null;
-let lastRestLink = '';
+let lastRestLink   = '';
 
+// ─────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────
 function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -289,18 +316,61 @@ function showToast(msg, isError = false) {
   setTimeout(() => { t.className = 'toast' + (isError ? ' error' : ''); }, 3500);
 }
 
+// Strict sanitiser — strips all HTML, trims, enforces max length
+function sanitise(str, maxLen = 500) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/[<>"'`]/g, '')   // strip injection chars
+    .trim()
+    .slice(0, maxLen);
+}
+
+// Slug: only lowercase alphanumeric and hyphens, no leading/trailing hyphens
+function sanitiseSlug(str) {
+  return str
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60);
+}
+
+// Safe dish name for inline onclick attribute
+function escapeDishName(name) {
+  return name
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;');
+}
+
+// Validate file: extension, size
+function validateFile(file, allowedExtensions) {
+  if (!file) return 'No file selected.';
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  if (!allowedExtensions.includes(ext)) {
+    return `Invalid file type. Expected: ${allowedExtensions.join(', ')}`;
+  }
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return `File too large. Maximum size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB.`;
+  }
+  return null; // valid
+}
+
 function showLoginScreen() {
-  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('dashboard').style.display    = 'none';
   document.getElementById('loginSection').style.display = 'flex';
-  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginEmail').value    = '';
   document.getElementById('loginPassword').value = '';
   document.getElementById('errorMsg').style.display = 'none';
   currentSession = null;
 }
 
-// ── LOGIN ──
+// ─────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────
 async function login() {
-  const email    = document.getElementById('loginEmail').value.trim();
+  const email    = sanitise(document.getElementById('loginEmail').value, 200);
   const password = document.getElementById('loginPassword').value;
   const btn      = document.getElementById('loginBtn');
   const errEl    = document.getElementById('errorMsg');
@@ -314,7 +384,7 @@ async function login() {
   }
 
   btn.textContent = 'Signing in...';
-  btn.disabled = true;
+  btn.disabled    = true;
 
   try {
     const { data, error } = await db.auth.signInWithPassword({ email, password });
@@ -325,7 +395,7 @@ async function login() {
       return;
     }
 
-    // Admin-only gate — reject any non-admin account immediately
+    // Hard admin gate — non-admin accounts are rejected immediately
     if (data.session.user.id !== ADMIN_USER_ID) {
       await db.auth.signOut();
       errEl.textContent = 'Access denied.';
@@ -335,7 +405,7 @@ async function login() {
 
     currentSession = data.session;
     document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('dashboard').style.display    = 'block';
     loadDashboard();
 
   } catch (e) {
@@ -343,7 +413,7 @@ async function login() {
     errEl.style.display = 'block';
   } finally {
     btn.textContent = 'Access Dashboard';
-    btn.disabled = false;
+    btn.disabled    = false;
   }
 }
 
@@ -352,7 +422,46 @@ async function logout() {
   showLoginScreen();
 }
 
-// ── LOAD DASHBOARD ──
+// ─────────────────────────────────────────────
+// FILE UPLOAD TO SUPABASE STORAGE
+// Returns the public URL or throws on failure.
+// ─────────────────────────────────────────────
+async function uploadModelFile(file, restaurantSlug, fileType, progressBarEl) {
+  // fileType: 'glb' | 'usdz'
+  const ext       = file.name.split('.').pop().toLowerCase();
+  const safeName  = `${restaurantSlug}/${fileType}-${Date.now()}.${ext}`;
+
+  // Show progress bar
+  if (progressBarEl) {
+    progressBarEl.style.display = 'block';
+    progressBarEl.querySelector('.upload-progress-bar').style.width = '30%';
+  }
+
+  const { data, error } = await db.storage
+    .from(STORAGE_BUCKET)
+    .upload(safeName, file, {
+      cacheControl: '31536000',   // 1 year cache — models don't change
+      upsert: false               // never silently overwrite
+    });
+
+  if (error) throw new Error('Upload failed: ' + error.message);
+
+  if (progressBarEl) {
+    progressBarEl.querySelector('.upload-progress-bar').style.width = '100%';
+    setTimeout(() => { progressBarEl.style.display = 'none'; }, 800);
+  }
+
+  // Get public URL
+  const { data: urlData } = db.storage
+    .from(STORAGE_BUCKET)
+    .getPublicUrl(data.path);
+
+  return urlData.publicUrl;
+}
+
+// ─────────────────────────────────────────────
+// LOAD DASHBOARD
+// ─────────────────────────────────────────────
 async function loadDashboard() {
   const { data, error } = await db
     .from('restaurants')
@@ -360,7 +469,8 @@ async function loadDashboard() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    document.getElementById('restaurantList').innerHTML = '<div class="empty-state">Error loading restaurants.</div>';
+    document.getElementById('restaurantList').innerHTML =
+      '<div class="empty-state">Error loading restaurants.</div>';
     return;
   }
 
@@ -373,7 +483,8 @@ async function loadDashboard() {
   document.getElementById('clientCountBadge').textContent = active;
 
   if (data.length === 0) {
-    document.getElementById('restaurantList').innerHTML = '<div class="empty-state">No restaurants yet — add your first one above.</div>';
+    document.getElementById('restaurantList').innerHTML =
+      '<div class="empty-state">No restaurants yet — add your first one above.</div>';
     return;
   }
 
@@ -398,27 +509,50 @@ async function loadDashboard() {
           <div class="form-row">
             <div class="form-group">
               <label>Dish Name *</label>
-              <input type="text" id="dname-${r.id}" placeholder="e.g. Classic Smash">
+              <input type="text" id="dname-${r.id}" placeholder="e.g. Classic Smash" maxlength="100">
             </div>
             <div class="form-group">
               <label>Price *</label>
-              <input type="text" id="dprice-${r.id}" placeholder="e.g. R 165">
+              <input type="text" id="dprice-${r.id}" placeholder="e.g. R 165" maxlength="30">
             </div>
           </div>
           <div class="form-group">
             <label>Description</label>
-            <textarea id="ddesc-${r.id}" placeholder="Describe the dish..."></textarea>
+            <textarea id="ddesc-${r.id}" placeholder="Describe the dish..." maxlength="500"></textarea>
           </div>
+
+          <!-- GLB UPLOAD -->
           <div class="form-group">
-            <label>GLB Model URL (Android) *</label>
-            <input type="text" id="dglb-${r.id}" placeholder="https://dstudio-ar.vercel.app/burger.glb">
+            <label>GLB Model (Android) *</label>
+            <div class="file-upload-area" id="glb-area-${r.id}">
+              <input type="file" accept=".glb" id="dglb-${r.id}"
+                onchange="handleFileSelect('${r.id}', 'glb', this)">
+              <span class="file-upload-icon">📦</span>
+              <span class="file-upload-label" id="glb-label-${r.id}">Click to upload .glb file</span>
+              <span class="file-upload-hint">Max 50MB</span>
+            </div>
+            <div class="upload-progress" id="glb-progress-${r.id}">
+              <div class="upload-progress-bar"></div>
+            </div>
           </div>
+
+          <!-- USDZ UPLOAD -->
           <div class="form-group">
-            <label>USDZ Model URL (iPhone) *</label>
-            <input type="text" id="dusdz-${r.id}" placeholder="https://dstudio-ar.vercel.app/burger.usdz">
+            <label>USDZ Model (iPhone) *</label>
+            <div class="file-upload-area" id="usdz-area-${r.id}">
+              <input type="file" accept=".usdz" id="dusdz-${r.id}"
+                onchange="handleFileSelect('${r.id}', 'usdz', this)">
+              <span class="file-upload-icon">📱</span>
+              <span class="file-upload-label" id="usdz-label-${r.id}">Click to upload .usdz file</span>
+              <span class="file-upload-hint">Max 50MB</span>
+            </div>
+            <div class="upload-progress" id="usdz-progress-${r.id}">
+              <div class="upload-progress-bar"></div>
+            </div>
           </div>
+
           <div style="display:flex;gap:10px;margin-top:4px;">
-            <button class="btn-primary" onclick="addDish('${r.id}')" style="flex:1;">Save Dish</button>
+            <button class="btn-primary" id="save-dish-btn-${r.id}" onclick="addDish('${r.id}', '${r.slug}')" style="flex:1;">Save Dish</button>
             <button class="btn-secondary" onclick="toggleDishForm('${r.id}')">Cancel</button>
           </div>
         </div>
@@ -427,11 +561,39 @@ async function loadDashboard() {
   `).join('');
 }
 
-// ── ADD RESTAURANT ──
+// ─────────────────────────────────────────────
+// FILE SELECT HANDLER
+// Validates immediately on pick — before any upload attempt
+// ─────────────────────────────────────────────
+function handleFileSelect(restaurantId, fileType, input) {
+  const file      = input.files[0];
+  const labelEl   = document.getElementById(`${fileType}-label-${restaurantId}`);
+  const areaEl    = document.getElementById(`${fileType}-area-${restaurantId}`);
+  const allowed   = fileType === 'glb' ? ALLOWED_GLB_TYPES : ALLOWED_USDZ_TYPES;
+
+  if (!file) return;
+
+  const validationError = validateFile(file, allowed);
+  if (validationError) {
+    showToast(validationError, true);
+    input.value = ''; // clear the picker
+    labelEl.textContent = `Click to upload .${fileType} file`;
+    areaEl.classList.remove('has-file');
+    return;
+  }
+
+  // Valid — update UI
+  labelEl.textContent = file.name;
+  areaEl.classList.add('has-file');
+}
+
+// ─────────────────────────────────────────────
+// ADD RESTAURANT
+// ─────────────────────────────────────────────
 async function addRestaurant() {
-  const name     = document.getElementById('newRestName').value.trim();
-  const slug     = document.getElementById('newRestSlug').value.trim().toLowerCase().replace(/\s+/g, '-');
-  const email    = document.getElementById('newClientEmail').value.trim();
+  const name     = sanitise(document.getElementById('newRestName').value, 100);
+  const slug     = sanitiseSlug(document.getElementById('newRestSlug').value);
+  const email    = sanitise(document.getElementById('newClientEmail').value, 200);
   const password = document.getElementById('newClientPassword').value;
   const isActive = document.getElementById('newRestActive').checked;
 
@@ -440,9 +602,19 @@ async function addRestaurant() {
     return;
   }
 
+  if (slug.length < 3) {
+    showToast('Slug must be at least 3 characters.', true);
+    return;
+  }
+
+  if (password.length < 8) {
+    showToast('Client password must be at least 8 characters.', true);
+    return;
+  }
+
   const btn = document.getElementById('addRestBtn');
   btn.textContent = 'Creating...';
-  btn.disabled = true;
+  btn.disabled    = true;
 
   try {
     const res = await fetch(EDGE_FN_URL, {
@@ -462,26 +634,33 @@ async function addRestaurant() {
     }
 
     const { error: restError } = await db.from('restaurants').insert([{
-      name, slug, is_active: isActive,
+      name,
+      slug,
+      is_active:    isActive,
       client_email: email,
       auth_user_id: result.user_id,
-      user_id: currentSession.user.id
+      user_id:      currentSession.user.id
     }]);
 
     if (restError) {
-      showToast('Error saving restaurant: ' + restError.message, true);
+      // Duplicate slug gives a unique violation — surface it clearly
+      if (restError.code === '23505') {
+        showToast('That slug is already taken. Choose a different one.', true);
+      } else {
+        showToast('Error saving restaurant: ' + restError.message, true);
+      }
       return;
     }
 
     lastRestLink = `${AR_BASE_URL}/menu.html?restaurant=${slug}`;
-    document.getElementById('restSuccessMsg').textContent = lastRestLink;
+    document.getElementById('restSuccessMsg').textContent  = lastRestLink;
     document.getElementById('restSuccessBox').style.display = 'block';
 
-    document.getElementById('newRestName').value      = '';
-    document.getElementById('newRestSlug').value      = '';
-    document.getElementById('newClientEmail').value   = '';
+    document.getElementById('newRestName').value       = '';
+    document.getElementById('newRestSlug').value       = '';
+    document.getElementById('newClientEmail').value    = '';
     document.getElementById('newClientPassword').value = '';
-    document.getElementById('newRestActive').checked  = false;
+    document.getElementById('newRestActive').checked   = false;
 
     showToast('Restaurant added successfully.');
     loadDashboard();
@@ -490,21 +669,25 @@ async function addRestaurant() {
     showToast('Unexpected error: ' + e.message, true);
   } finally {
     btn.textContent = 'Add Restaurant';
-    btn.disabled = false;
+    btn.disabled    = false;
   }
 }
 
-// ── TOGGLE RESTAURANT ──
+// ─────────────────────────────────────────────
+// TOGGLE RESTAURANT EXPAND
+// ─────────────────────────────────────────────
 function toggleRestaurant(id) {
   const section = document.getElementById(`dishes-${id}`);
   const chevron = document.getElementById(`chevron-${id}`);
   const isOpen  = section.style.display === 'block';
   section.style.display = isOpen ? 'none' : 'block';
-  chevron.className = 'chevron' + (isOpen ? '' : ' open');
+  chevron.className     = 'chevron' + (isOpen ? '' : ' open');
   if (!isOpen) loadDishes(id);
 }
 
-// ── LOAD DISHES ──
+// ─────────────────────────────────────────────
+// LOAD DISHES
+// ─────────────────────────────────────────────
 async function loadDishes(restaurantId) {
   const { data, error } = await db
     .from('dishes')
@@ -515,7 +698,10 @@ async function loadDishes(restaurantId) {
   const container = document.getElementById(`dish-list-${restaurantId}`);
 
   if (error) { container.innerHTML = '<div class="empty-state">Error loading dishes.</div>'; return; }
-  if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">No dishes yet — add one below.</div>'; return; }
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div class="empty-state">No dishes yet — add one below.</div>';
+    return;
+  }
 
   container.innerHTML = data.map(d => `
     <div class="dish-item" id="dish-item-${d.id}">
@@ -525,114 +711,118 @@ async function loadDishes(restaurantId) {
       </div>
       <div class="dish-actions">
         <button class="btn-secondary" onclick="copyDishLink('${d.slug}')">Copy AR Link</button>
-        <button class="btn-qr" id="qr-btn-${d.id}" onclick="downloadQR('${d.slug}', '${escapeDishName(d.dish_name)}', '${d.id}')">Download QR</button>
+        <button class="btn-qr" id="qr-btn-${d.id}"
+          onclick="downloadQR('${d.slug}', '${escapeDishName(d.dish_name)}', '${d.id}')">
+          Download QR
+        </button>
         <button class="btn-danger" onclick="deleteDish('${d.id}', '${restaurantId}')">Delete</button>
       </div>
     </div>
   `).join('');
 }
 
-// ── QR CODE GENERATION & DOWNLOAD ──
-//
-// Strategy: use QRCode.toCanvas() to render into an offscreen canvas,
-// then export that canvas as a PNG data URL and trigger a download.
-// We do NOT inject a canvas into the DOM — no visual flicker, no layout shift.
-// Error correction level H (30%) gives best scan reliability for print/laminate use.
-//
-async function downloadQR(dishSlug, dishName, dishId) {
-  const arUrl = `${AR_BASE_URL}/dish.html?slug=${dishSlug}`;
-  const btn   = document.getElementById(`qr-btn-${dishId}`);
-
-  btn.textContent = 'Generating...';
-  btn.disabled    = true;
-
-  try {
-    // Offscreen canvas — never appended to DOM
-    const canvas = document.createElement('canvas');
-
-    await QRCode.toCanvas(canvas, arUrl, {
-      width: 512,          // 512×512 px — sharp at print sizes up to ~5cm
-      margin: 2,           // quiet zone in modules (spec minimum is 4, 2 works for digital)
-      color: {
-        dark:  '#000000',  // solid black for maximum scanner contrast
-        light: '#ffffff'
-      },
-      errorCorrectionLevel: 'H'  // highest — survives logo overlays, minor damage
-    });
-
-    // Export canvas → PNG data URL → trigger download
-    const dataUrl  = canvas.toDataURL('image/png');
-    const link     = document.createElement('a');
-    link.href      = dataUrl;
-    // Filename: sanitised dish name, no spaces, lowercase — safe across all OS
-    link.download  = `qr-${dishName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`;
-    link.click();
-
-    showToast(`QR downloaded for ${dishName}`);
-
-  } catch (err) {
-    showToast('QR generation failed: ' + err.message, true);
-  } finally {
-    btn.textContent = 'Download QR';
-    btn.disabled    = false;
-  }
-}
-
-// Safely escape dish names for inline HTML attribute use
-// Prevents broken onclick if dish name contains quotes or special chars
-function escapeDishName(name) {
-  return name
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/"/g, '&quot;');
-}
-
-// ── TOGGLE DISH FORM ──
+// ─────────────────────────────────────────────
+// TOGGLE DISH FORM
+// ─────────────────────────────────────────────
 function toggleDishForm(restaurantId) {
   const form = document.getElementById(`dish-form-${restaurantId}`);
   form.style.display = form.style.display === 'block' ? 'none' : 'block';
 }
 
-// ── ADD DISH ──
-async function addDish(restaurantId) {
-  const dishName  = document.getElementById(`dname-${restaurantId}`).value.trim();
-  const dishPrice = document.getElementById(`dprice-${restaurantId}`).value.trim();
-  const dishDesc  = document.getElementById(`ddesc-${restaurantId}`).value.trim();
-  const modelUrl  = document.getElementById(`dglb-${restaurantId}`).value.trim();
-  const usdzUrl   = document.getElementById(`dusdz-${restaurantId}`).value.trim();
+// ─────────────────────────────────────────────
+// ADD DISH — uploads files then saves to DB
+// ─────────────────────────────────────────────
+async function addDish(restaurantId, restaurantSlug) {
+  const dishName  = sanitise(document.getElementById(`dname-${restaurantId}`).value, 100);
+  const dishPrice = sanitise(document.getElementById(`dprice-${restaurantId}`).value, 30);
+  const dishDesc  = sanitise(document.getElementById(`ddesc-${restaurantId}`).value, 500);
+  const glbInput  = document.getElementById(`dglb-${restaurantId}`);
+  const usdzInput = document.getElementById(`dusdz-${restaurantId}`);
+  const glbFile   = glbInput?.files[0];
+  const usdzFile  = usdzInput?.files[0];
 
-  if (!dishName || !dishPrice || !modelUrl || !usdzUrl) {
-    showToast('Please fill in all required dish fields.', true);
+  if (!dishName || !dishPrice) {
+    showToast('Dish name and price are required.', true);
     return;
   }
 
-  const slug = dishName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now();
+  // Re-validate files at save time (user could have bypassed the onchange)
+  const glbError  = validateFile(glbFile,  ALLOWED_GLB_TYPES);
+  const usdzError = validateFile(usdzFile, ALLOWED_USDZ_TYPES);
+  if (glbError)  { showToast('GLB: '  + glbError,  true); return; }
+  if (usdzError) { showToast('USDZ: ' + usdzError, true); return; }
 
-  const { error } = await db.from('dishes').insert([{
-    restaurant_id: restaurantId,
-    dish_name:     dishName,
-    dish_price:    dishPrice,
-    dish_description: dishDesc,
-    model_url:     modelUrl,
-    usdz_url:      usdzUrl,
-    slug
-  }]);
+  const saveBtn = document.getElementById(`save-dish-btn-${restaurantId}`);
+  saveBtn.textContent = 'Uploading...';
+  saveBtn.disabled    = true;
 
-  if (error) { showToast('Error saving dish: ' + error.message, true); return; }
+  try {
+    // Upload GLB
+    const glbUrl = await uploadModelFile(
+      glbFile, restaurantSlug, 'glb',
+      document.getElementById(`glb-progress-${restaurantId}`)
+    );
 
-  document.getElementById(`dname-${restaurantId}`).value  = '';
-  document.getElementById(`dprice-${restaurantId}`).value = '';
-  document.getElementById(`ddesc-${restaurantId}`).value  = '';
-  document.getElementById(`dglb-${restaurantId}`).value   = '';
-  document.getElementById(`dusdz-${restaurantId}`).value  = '';
+    saveBtn.textContent = 'Uploading USDZ...';
 
-  toggleDishForm(restaurantId);
-  loadDishes(restaurantId);
-  loadDashboard();
-  showToast('Dish added. Click "Download QR" to get its QR code.');
+    // Upload USDZ
+    const usdzUrl = await uploadModelFile(
+      usdzFile, restaurantSlug, 'usdz',
+      document.getElementById(`usdz-progress-${restaurantId}`)
+    );
+
+    saveBtn.textContent = 'Saving...';
+
+    // Build slug: sanitised name + timestamp for uniqueness
+    const slug = dishName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) + '-' + Date.now();
+
+    const { error } = await db.from('dishes').insert([{
+      restaurant_id:    restaurantId,
+      dish_name:        dishName,
+      dish_price:       dishPrice,
+      dish_description: dishDesc,
+      model_url:        glbUrl,
+      usdz_url:         usdzUrl,
+      slug
+    }]);
+
+    if (error) {
+      showToast('Error saving dish: ' + error.message, true);
+      return;
+    }
+
+    // Reset form
+    document.getElementById(`dname-${restaurantId}`).value  = '';
+    document.getElementById(`dprice-${restaurantId}`).value = '';
+    document.getElementById(`ddesc-${restaurantId}`).value  = '';
+    glbInput.value  = '';
+    usdzInput.value = '';
+    document.getElementById(`glb-label-${restaurantId}`).textContent  = 'Click to upload .glb file';
+    document.getElementById(`usdz-label-${restaurantId}`).textContent = 'Click to upload .usdz file';
+    document.getElementById(`glb-area-${restaurantId}`).classList.remove('has-file');
+    document.getElementById(`usdz-area-${restaurantId}`).classList.remove('has-file');
+
+    toggleDishForm(restaurantId);
+    loadDishes(restaurantId);
+    loadDashboard();
+    showToast('Dish saved. Click "Download QR" to get its QR code.');
+
+  } catch (e) {
+    showToast('Error: ' + e.message, true);
+  } finally {
+    saveBtn.textContent = 'Save Dish';
+    saveBtn.disabled    = false;
+  }
 }
 
-// ── DELETE DISH ──
+// ─────────────────────────────────────────────
+// DELETE DISH
+// ─────────────────────────────────────────────
 async function deleteDish(dishId, restaurantId) {
   if (!confirm('Delete this dish? This cannot be undone.')) return;
   const { error } = await db.from('dishes').delete().eq('id', dishId);
@@ -642,7 +832,44 @@ async function deleteDish(dishId, restaurantId) {
   showToast('Dish deleted.');
 }
 
-// ── COPY LINKS ──
+// ─────────────────────────────────────────────
+// QR CODE GENERATION & DOWNLOAD
+// ─────────────────────────────────────────────
+async function downloadQR(dishSlug, dishName, dishId) {
+  const arUrl = `${AR_BASE_URL}/dish.html?slug=${dishSlug}`;
+  const btn   = document.getElementById(`qr-btn-${dishId}`);
+
+  btn.textContent = 'Generating...';
+  btn.disabled    = true;
+
+  try {
+    const canvas = document.createElement('canvas');
+
+    await QRCode.toCanvas(canvas, arUrl, {
+      width: 512,
+      margin: 2,
+      color: { dark: '#000000', light: '#ffffff' },
+      errorCorrectionLevel: 'H'
+    });
+
+    const dataUrl  = canvas.toDataURL('image/png');
+    const link     = document.createElement('a');
+    link.href      = dataUrl;
+    link.download  = `qr-${dishName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`;
+    link.click();
+
+    showToast(`QR downloaded for ${dishName}`);
+  } catch (err) {
+    showToast('QR generation failed: ' + err.message, true);
+  } finally {
+    btn.textContent = 'Download QR';
+    btn.disabled    = false;
+  }
+}
+
+// ─────────────────────────────────────────────
+// COPY LINKS
+// ─────────────────────────────────────────────
 function copyMenuLink(slug) {
   navigator.clipboard.writeText(`${AR_BASE_URL}/menu.html?restaurant=${slug}`)
     .then(() => showToast('Menu link copied!'));
@@ -657,26 +884,31 @@ function copyDishLink(dishSlug) {
     .then(() => showToast('AR dish link copied!'));
 }
 
-// ── ENTER KEY ──
+// ─────────────────────────────────────────────
+// ENTER KEY
+// ─────────────────────────────────────────────
 document.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') login();
+  if (e.key === 'Enter' &&
+      document.getElementById('loginSection').style.display !== 'none') login();
 });
 
-// ── INIT — check existing session ──
+// ─────────────────────────────────────────────
+// INIT — restore admin session if already logged in
+// ─────────────────────────────────────────────
 (async () => {
   try {
     const { data } = await db.auth.getSession();
     if (data.session && data.session.user.id === ADMIN_USER_ID) {
       currentSession = data.session;
       document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('dashboard').style.display    = 'block';
       loadDashboard();
     } else if (data.session) {
-      // Someone else's session — sign them out silently
+      // Non-admin session found — purge it silently
       await db.auth.signOut();
     }
   } catch {
-    // No session — stay on login
+    // No session — stay on login screen
   }
 })();
 </script>
