@@ -128,10 +128,10 @@
 
 <script>
 // ─────────────────────────────────────────────
-// CONFIGURATION — replace with your real anon key (starts with eyJ)
+// SUPABASE CONFIG — hardcoded, no placeholders
 // ─────────────────────────────────────────────
-const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_REAL_ANON_KEY_HERE'; // ← paste from Supabase dashboard → Settings → API
+const SUPABASE_URL     = 'https://kynmckifaixaakpdarxn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5bm1ja2lmYWl4YWFrcGRhcnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjkzNDIsImV4cCI6MjA5MzQwNTM0Mn0.wNncRxFWqn7tVcRJzdG1x6AmvB3k5e6DQamRgXPG7ik';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -143,19 +143,19 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 let currentRestaurant = null;
-let chartInstances = {};
+let chartInstances    = {};
 
 // ─────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────
 function getRestaurantSlug() {
-  return new URLSearchParams(window.location.search).get('restaurant');
+  return new URLSearchParams(window.location.search).get('restaurant') || '';
 }
 
 function showError(msg) {
   const el = document.getElementById('errorMsg');
-  el.textContent = msg;
-  el.style.display = 'block';
+  el.textContent    = msg;
+  el.style.display  = 'block';
 }
 
 function hideError() {
@@ -163,8 +163,7 @@ function hideError() {
 }
 
 // ─────────────────────────────────────────────
-// RESTAURANT NAME ON LOGIN SCREEN
-// Uses anon client — public read is fine for name only
+// LOAD RESTAURANT NAME ON LOGIN SCREEN
 // ─────────────────────────────────────────────
 async function loadRestaurantName() {
   const slug = getRestaurantSlug();
@@ -178,7 +177,6 @@ async function loadRestaurantName() {
       .select('name')
       .eq('slug', slug)
       .single();
-
     document.getElementById('loginRestName').textContent =
       (!error && data) ? data.name : 'Restaurant not found';
   } catch {
@@ -187,15 +185,12 @@ async function loadRestaurantName() {
 }
 
 // ─────────────────────────────────────────────
-// VERIFY RESTAURANT OWNERSHIP
-// Called AFTER auth — uses the authenticated session so RLS
-// grants access to auth_user_id. Ownership checked in JS.
+// VERIFY RESTAURANT OWNERSHIP AFTER AUTH
 // ─────────────────────────────────────────────
 async function fetchAndVerifyRestaurant(userId) {
   const slug = getRestaurantSlug();
   if (!slug) return null;
 
-  // db client now carries the authenticated session bearer token
   const { data, error } = await db
     .from('restaurants')
     .select('*')
@@ -203,8 +198,6 @@ async function fetchAndVerifyRestaurant(userId) {
     .single();
 
   if (error || !data) return null;
-
-  // Ownership check in JavaScript — never trust RLS alone for this
   if (data.auth_user_id !== userId) return null;
 
   return data;
@@ -237,10 +230,13 @@ async function login() {
       return;
     }
 
-    const userId = authData.session.user.id;
+    // Explicitly set the session so the client uses the bearer token
+    await db.auth.setSession({
+      access_token:  authData.session.access_token,
+      refresh_token: authData.session.refresh_token
+    });
 
-    // Session is fully established at this point — fetchAndVerifyRestaurant
-    // will use the authenticated client, so auth_user_id is readable via RLS
+    const userId    = authData.session.user.id;
     const restaurant = await fetchAndVerifyRestaurant(userId);
 
     if (!restaurant) {
@@ -270,7 +266,7 @@ async function logout() {
   Object.values(chartInstances).forEach(c => c.destroy());
   chartInstances = {};
   document.getElementById('analyticsSection').style.display = 'none';
-  document.getElementById('loginSection').style.display    = 'flex';
+  document.getElementById('loginSection').style.display     = 'flex';
   document.getElementById('loginEmail').value    = '';
   document.getElementById('loginPassword').value = '';
   hideError();
@@ -280,9 +276,9 @@ async function logout() {
 // SHOW ANALYTICS
 // ─────────────────────────────────────────────
 function showAnalytics() {
-  document.getElementById('loginSection').style.display    = 'none';
+  document.getElementById('loginSection').style.display     = 'none';
   document.getElementById('analyticsSection').style.display = 'block';
-  document.getElementById('topbarRestName').textContent    = currentRestaurant.name;
+  document.getElementById('topbarRestName').textContent     = currentRestaurant.name;
   loadAnalytics();
 }
 
@@ -300,11 +296,10 @@ async function refreshData() {
 async function loadAnalytics() {
   try {
     const now           = new Date();
-    const weekStart     = new Date(now); weekStart.setDate(now.getDate() - 7);   weekStart.setHours(0,0,0,0);
+    const weekStart     = new Date(now); weekStart.setDate(now.getDate() - 7);    weekStart.setHours(0,0,0,0);
     const lastWeekStart = new Date(now); lastWeekStart.setDate(now.getDate() - 14); lastWeekStart.setHours(0,0,0,0);
-    const monthStart    = new Date(now); monthStart.setDate(now.getDate() - 28); monthStart.setHours(0,0,0,0);
+    const monthStart    = new Date(now); monthStart.setDate(now.getDate() - 28);  monthStart.setHours(0,0,0,0);
 
-    // dish_views joined to dishes — column is dish_name; adjust if your schema differs
     const { data: allViews, error: viewsError } = await db
       .from('dish_views')
       .select('*, dishes(dish_name)')
@@ -337,7 +332,6 @@ async function loadAnalytics() {
     const androidViews = thisWeekViews.filter(v => v.device_type === 'android').length;
     const iosPct       = thisWeekCount > 0 ? Math.round((iosViews / thisWeekCount) * 100) : 0;
 
-    // Build dish leaderboard — handles both dish_name and name column gracefully
     const dishCounts = {};
     thisWeekViews.forEach(v => {
       const name = v.dishes?.dish_name || v.dishes?.name || 'Unknown';
@@ -559,23 +553,24 @@ document.addEventListener('keypress', function(e) {
     const { data: sessionData } = await db.auth.getSession();
 
     if (sessionData?.session) {
-      const userId = sessionData.session.user.id;
+      // Explicitly set session so storage client inherits bearer token
+      await db.auth.setSession({
+        access_token:  sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token
+      });
 
-      // Session is live — authenticated client carries bearer token automatically
+      const userId     = sessionData.session.user.id;
       const restaurant = await fetchAndVerifyRestaurant(userId);
 
       if (restaurant) {
         currentRestaurant = restaurant;
         showAnalytics();
       } else {
-        // Session exists but doesn't own this restaurant slug — sign out cleanly
         await db.auth.signOut();
       }
     }
-    // No session → stay on login screen (default state)
   } catch (e) {
     console.error('Session restore error:', e);
-    // Stay on login screen — do not crash
   }
 })();
 </script>
