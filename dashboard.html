@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>D'Studio AR — Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -820,29 +820,31 @@ async function deleteDish(dishId, restaurantId) {
 
 // ─────────────────────────────────────────────
 // QR CODE GENERATION & DOWNLOAD
+// Uses Google Charts API — no JS library required
 // ─────────────────────────────────────────────
 async function downloadQR(dishSlug, dishName, dishId) {
-  const arUrl = `${AR_BASE_URL}/dish.html?slug=${dishSlug}`;
-  const btn   = document.getElementById(`qr-btn-${dishId}`);
+  const arUrl    = `${AR_BASE_URL}/dish.html?slug=${dishSlug}`;
+  const btn      = document.getElementById(`qr-btn-${dishId}`);
+  const safeName = dishName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
   btn.textContent = 'Generating...';
   btn.disabled    = true;
 
   try {
-    const canvas = document.createElement('canvas');
+    const qrApiUrl = `https://chart.googleapis.com/chart?cht=qr&chs=512x512&chl=${encodeURIComponent(arUrl)}&choe=UTF-8&chld=H|2`;
 
-    await QRCode.toCanvas(canvas, arUrl, {
-      width: 512,
-      margin: 2,
-      color: { dark: '#000000', light: '#ffffff' },
-      errorCorrectionLevel: 'H'
-    });
+    const response = await fetch(qrApiUrl);
+    if (!response.ok) throw new Error('QR API request failed');
 
-    const dataUrl = canvas.toDataURL('image/png');
-    const link    = document.createElement('a');
-    link.href     = dataUrl;
-    link.download = `qr-${dishName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`;
+    const blob      = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link      = document.createElement('a');
+    link.href       = objectUrl;
+    link.download   = `qr-${safeName}.png`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 
     showToast(`QR downloaded for ${dishName}`);
   } catch (err) {
