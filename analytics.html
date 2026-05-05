@@ -47,7 +47,6 @@
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,8,8,0.96); backdrop-filter:blur(16px); z-index:100; }
     .topbar-left { display:flex; align-items:center; gap:14px; }
     .topbar-logo { width:32px; filter:invert(1); opacity:0.8; }
-    .topbar-info {}
     .topbar-title { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:400; letter-spacing:4px; text-transform:uppercase; line-height:1.1; }
     .topbar-rest { font-size:10px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; }
     .topbar-right { display:flex; gap:12px; align-items:center; }
@@ -128,11 +127,14 @@
 </div>
 
 <script>
+// ─────────────────────────────────────────────
+// CONFIGURATION — replace with your real anon key (starts with eyJ)
+// ─────────────────────────────────────────────
 const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
+const SUPABASE_ANON_KEY = 'YOUR_REAL_ANON_KEY_HERE'; // ← paste from Supabase dashboard → Settings → API
 
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -143,6 +145,9 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
 let currentRestaurant = null;
 let chartInstances = {};
 
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
 function getRestaurantSlug() {
   return new URLSearchParams(window.location.search).get('restaurant');
 }
@@ -157,7 +162,10 @@ function hideError() {
   document.getElementById('errorMsg').style.display = 'none';
 }
 
-// ── LOAD RESTAURANT NAME FOR LOGIN SCREEN ──
+// ─────────────────────────────────────────────
+// RESTAURANT NAME ON LOGIN SCREEN
+// Uses anon client — public read is fine for name only
+// ─────────────────────────────────────────────
 async function loadRestaurantName() {
   const slug = getRestaurantSlug();
   if (!slug) {
@@ -165,47 +173,50 @@ async function loadRestaurantName() {
     return;
   }
   try {
-    const { data } = await db.from('restaurants').select('name').eq('slug', slug).single();
-    document.getElementById('loginRestName').textContent = data ? data.name : 'Restaurant not found';
+    const { data, error } = await db
+      .from('restaurants')
+      .select('name')
+      .eq('slug', slug)
+      .single();
+
+    document.getElementById('loginRestName').textContent =
+      (!error && data) ? data.name : 'Restaurant not found';
   } catch {
     document.getElementById('loginRestName').textContent = '';
   }
 }
 
-// ── FETCH AND VERIFY RESTAURANT ──
-// Uses anon client — no auth context needed — just matches auth_user_id in JS
+// ─────────────────────────────────────────────
+// VERIFY RESTAURANT OWNERSHIP
+// Called AFTER auth — uses the authenticated session so RLS
+// grants access to auth_user_id. Ownership checked in JS.
+// ─────────────────────────────────────────────
 async function fetchAndVerifyRestaurant(userId) {
   const slug = getRestaurantSlug();
   if (!slug) return null;
 
-  // Use a fresh anon fetch — no RLS user context required since policy is public read
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/restaurants?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`,
-    {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      }
-    }
-  );
+  // db client now carries the authenticated session bearer token
+  const { data, error } = await db
+    .from('restaurants')
+    .select('*')
+    .eq('slug', slug)
+    .single();
 
-  if (!response.ok) return null;
-  const rows = await response.json();
-  if (!rows || rows.length === 0) return null;
+  if (error || !data) return null;
 
-  const restaurant = rows[0];
+  // Ownership check in JavaScript — never trust RLS alone for this
+  if (data.auth_user_id !== userId) return null;
 
-  // Verify ownership purely in JavaScript — no RLS involved
-  if (restaurant.auth_user_id !== userId) return null;
-
-  return restaurant;
+  return data;
 }
 
-// ── LOGIN ──
+// ─────────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────────
 async function login() {
-  const email = document.getElementById('loginEmail').value.trim();
+  const email    = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
-  const btn = document.getElementById('loginBtn');
+  const btn      = document.getElementById('loginBtn');
 
   hideError();
 
@@ -215,24 +226,25 @@ async function login() {
   }
 
   btn.textContent = 'Signing in...';
-  btn.disabled = true;
+  btn.disabled    = true;
 
   try {
-    // Sign in
-    const { data: authData, error: authError } = await db.auth.signInWithPassword({ email, password });
+    const { data: authData, error: authError } =
+      await db.auth.signInWithPassword({ email, password });
 
-    if (authError || !authData.session) {
+    if (authError || !authData?.session) {
       showError('Incorrect email or password.');
       return;
     }
 
     const userId = authData.session.user.id;
 
-    // Fetch restaurant via direct REST call — bypasses any RLS session timing issues
+    // Session is fully established at this point — fetchAndVerifyRestaurant
+    // will use the authenticated client, so auth_user_id is readable via RLS
     const restaurant = await fetchAndVerifyRestaurant(userId);
 
     if (!restaurant) {
-      showError('Access denied for this restaurant.');
+      showError('Access denied. You do not own this restaurant.');
       await db.auth.signOut();
       return;
     }
@@ -242,44 +254,57 @@ async function login() {
 
   } catch (e) {
     showError('Something went wrong. Please try again.');
+    console.error('Login error:', e);
   } finally {
     btn.textContent = 'View Analytics';
-    btn.disabled = false;
+    btn.disabled    = false;
   }
 }
 
+// ─────────────────────────────────────────────
+// LOGOUT
+// ─────────────────────────────────────────────
 async function logout() {
   await db.auth.signOut();
   currentRestaurant = null;
+  Object.values(chartInstances).forEach(c => c.destroy());
+  chartInstances = {};
   document.getElementById('analyticsSection').style.display = 'none';
-  document.getElementById('loginSection').style.display = 'flex';
-  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginSection').style.display    = 'flex';
+  document.getElementById('loginEmail').value    = '';
   document.getElementById('loginPassword').value = '';
   hideError();
 }
 
+// ─────────────────────────────────────────────
+// SHOW ANALYTICS
+// ─────────────────────────────────────────────
 function showAnalytics() {
-  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('loginSection').style.display    = 'none';
   document.getElementById('analyticsSection').style.display = 'block';
-  document.getElementById('topbarRestName').textContent = currentRestaurant.name;
+  document.getElementById('topbarRestName').textContent    = currentRestaurant.name;
   loadAnalytics();
 }
 
 async function refreshData() {
-  document.getElementById('analyticsContent').innerHTML = '<div class="loading-state">Refreshing...</div>';
+  document.getElementById('analyticsContent').innerHTML =
+    '<div class="loading-state">Refreshing...</div>';
   Object.values(chartInstances).forEach(c => c.destroy());
   chartInstances = {};
-  loadAnalytics();
+  await loadAnalytics();
 }
 
-// ── MAIN ANALYTICS LOAD ──
+// ─────────────────────────────────────────────
+// MAIN ANALYTICS LOAD
+// ─────────────────────────────────────────────
 async function loadAnalytics() {
   try {
-    const now = new Date();
-    const weekStart = new Date(now); weekStart.setDate(now.getDate() - 7); weekStart.setHours(0,0,0,0);
+    const now           = new Date();
+    const weekStart     = new Date(now); weekStart.setDate(now.getDate() - 7);   weekStart.setHours(0,0,0,0);
     const lastWeekStart = new Date(now); lastWeekStart.setDate(now.getDate() - 14); lastWeekStart.setHours(0,0,0,0);
-    const monthStart = new Date(now); monthStart.setDate(now.getDate() - 28); monthStart.setHours(0,0,0,0);
+    const monthStart    = new Date(now); monthStart.setDate(now.getDate() - 28); monthStart.setHours(0,0,0,0);
 
+    // dish_views joined to dishes — column is dish_name; adjust if your schema differs
     const { data: allViews, error: viewsError } = await db
       .from('dish_views')
       .select('*, dishes(dish_name)')
@@ -287,38 +312,42 @@ async function loadAnalytics() {
       .gte('viewed_at', monthStart.toISOString())
       .order('viewed_at', { ascending: true });
 
-    if (viewsError) throw new Error(viewsError.message);
+    if (viewsError) throw new Error('Views query failed: ' + viewsError.message);
 
     const { data: dishes, error: dishesError } = await db
       .from('dishes')
       .select('*')
       .eq('restaurant_id', currentRestaurant.id);
 
-    if (dishesError) throw new Error(dishesError.message);
+    if (dishesError) throw new Error('Dishes query failed: ' + dishesError.message);
 
-    const views = allViews || [];
+    const views         = allViews || [];
     const thisWeekViews = views.filter(v => new Date(v.viewed_at) >= weekStart);
-    const lastWeekViews = views.filter(v => new Date(v.viewed_at) >= lastWeekStart && new Date(v.viewed_at) < weekStart);
+    const lastWeekViews = views.filter(v =>
+      new Date(v.viewed_at) >= lastWeekStart && new Date(v.viewed_at) < weekStart
+    );
 
     const thisWeekCount = thisWeekViews.length;
     const lastWeekCount = lastWeekViews.length;
-    const weekChange = lastWeekCount === 0
+    const weekChange    = lastWeekCount === 0
       ? (thisWeekCount > 0 ? 100 : 0)
       : Math.round(((thisWeekCount - lastWeekCount) / lastWeekCount) * 100);
 
-    const iosViews = thisWeekViews.filter(v => v.device_type === 'ios').length;
+    const iosViews     = thisWeekViews.filter(v => v.device_type === 'ios').length;
     const androidViews = thisWeekViews.filter(v => v.device_type === 'android').length;
-    const iosPct = thisWeekCount > 0 ? Math.round((iosViews / thisWeekCount) * 100) : 0;
+    const iosPct       = thisWeekCount > 0 ? Math.round((iosViews / thisWeekCount) * 100) : 0;
 
+    // Build dish leaderboard — handles both dish_name and name column gracefully
     const dishCounts = {};
     thisWeekViews.forEach(v => {
-      const name = v.dishes?.dish_name || 'Unknown';
+      const name = v.dishes?.dish_name || v.dishes?.name || 'Unknown';
       dishCounts[name] = (dishCounts[name] || 0) + 1;
     });
-    const sortedDishes = Object.entries(dishCounts).sort((a,b) => b[1] - a[1]);
-    const topDish = sortedDishes[0]?.[0] || '—';
-    const bottomDish = sortedDishes[sortedDishes.length - 1]?.[0] || '—';
+    const sortedDishes = Object.entries(dishCounts).sort((a, b) => b[1] - a[1]);
+    const topDish      = sortedDishes[0]?.[0] || '—';
+    const bottomDish   = sortedDishes[sortedDishes.length - 1]?.[0] || '—';
 
+    // 28-day daily map
     const dailyMap = {};
     for (let i = 27; i >= 0; i--) {
       const d = new Date(now);
@@ -330,6 +359,7 @@ async function loadAnalytics() {
       if (dailyMap[key] !== undefined) dailyMap[key]++;
     });
 
+    // Hourly heatmap
     const hourlyMap = Array(24).fill(0);
     thisWeekViews.forEach(v => {
       hourlyMap[new Date(v.viewed_at).getHours()]++;
@@ -338,20 +368,23 @@ async function loadAnalytics() {
     renderAnalytics({
       thisWeekCount, lastWeekCount, weekChange,
       iosPct, androidPct: 100 - iosPct, iosViews, androidViews,
-      topDish, bottomDish,
-      sortedDishes, dailyMap, hourlyMap,
+      topDish, bottomDish, sortedDishes, dailyMap, hourlyMap,
       totalDishes: (dishes || []).length
     });
 
   } catch (e) {
+    console.error('Analytics load error:', e);
     document.getElementById('analyticsContent').innerHTML =
       `<div class="empty-state">Error loading analytics: ${e.message}</div>`;
   }
 }
 
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
 function renderAnalytics(d) {
   const changeClass = d.weekChange >= 0 ? 'stat-up' : 'stat-down';
-  const changeStr = (d.weekChange >= 0 ? '+' : '') + d.weekChange + '%';
+  const changeStr   = (d.weekChange >= 0 ? '+' : '') + d.weekChange + '%';
 
   document.getElementById('analyticsContent').innerHTML = `
     <div class="stats-grid">
@@ -406,13 +439,16 @@ function renderAnalytics(d) {
           ${d.sortedDishes.length === 0
             ? '<div class="empty-state">No views this week yet.</div>'
             : d.sortedDishes.map((item, i) => {
-                const pct = d.sortedDishes[0][1] > 0 ? Math.round((item[1] / d.sortedDishes[0][1]) * 100) : 0;
+                const pct = d.sortedDishes[0][1] > 0
+                  ? Math.round((item[1] / d.sortedDishes[0][1]) * 100) : 0;
                 return `
                   <div class="dish-row">
                     <div class="dish-rank">${i + 1}</div>
                     <div class="dish-row-info">
                       <div class="dish-row-name">${item[0]}</div>
-                      <div class="dish-row-bar-wrap"><div class="dish-row-bar" style="width:${pct}%"></div></div>
+                      <div class="dish-row-bar-wrap">
+                        <div class="dish-row-bar" style="width:${pct}%"></div>
+                      </div>
                     </div>
                     <div class="dish-row-count">${item[1]} view${item[1] !== 1 ? 's' : ''}</div>
                   </div>`;
@@ -462,7 +498,7 @@ function renderAnalytics(d) {
   chartInstances.hourly = new Chart(document.getElementById('hourlyChart'), {
     type: 'bar',
     data: {
-      labels: Array.from({length:24}, (_,i) => i + 'h'),
+      labels: Array.from({ length: 24 }, (_, i) => i + 'h'),
       datasets: [{
         data: d.hourlyMap,
         backgroundColor: 'rgba(200,169,110,0.6)',
@@ -503,30 +539,43 @@ function renderAnalytics(d) {
   });
 }
 
-// ── ENTER KEY ──
+// ─────────────────────────────────────────────
+// ENTER KEY
+// ─────────────────────────────────────────────
 document.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') login();
+  if (e.key === 'Enter' &&
+      document.getElementById('loginSection').style.display !== 'none') {
+    login();
+  }
 });
 
-// ── INIT — check existing session on page load ──
+// ─────────────────────────────────────────────
+// INIT — restore session if already logged in
+// ─────────────────────────────────────────────
 (async () => {
   await loadRestaurantName();
 
   try {
     const { data: sessionData } = await db.auth.getSession();
+
     if (sessionData?.session) {
       const userId = sessionData.session.user.id;
+
+      // Session is live — authenticated client carries bearer token automatically
       const restaurant = await fetchAndVerifyRestaurant(userId);
+
       if (restaurant) {
         currentRestaurant = restaurant;
         showAnalytics();
       } else {
-        // Session exists but doesn't match this restaurant — sign out cleanly
+        // Session exists but doesn't own this restaurant slug — sign out cleanly
         await db.auth.signOut();
       }
     }
-  } catch {
-    // No valid session — stay on login screen
+    // No session → stay on login screen (default state)
+  } catch (e) {
+    console.error('Session restore error:', e);
+    // Stay on login screen — do not crash
   }
 })();
 </script>
