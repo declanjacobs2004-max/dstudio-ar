@@ -22,7 +22,15 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); min-height:100vh; }
 
-    /* LOGIN */
+    #debugBox {
+      display:none;
+      position:fixed; bottom:0; left:0; right:0;
+      background:#1a0000; border-top:2px solid #e05555;
+      padding:16px; font-family:monospace; font-size:11px;
+      color:#ff9999; z-index:9999; max-height:40vh; overflow-y:auto;
+      white-space:pre-wrap; word-break:break-all;
+    }
+
     #loginSection {
       display:flex; flex-direction:column; align-items:center;
       justify-content:center; min-height:100vh; padding:40px 20px;
@@ -42,7 +50,6 @@
     .btn-secondary { background:transparent; border:1px solid var(--border); color:var(--muted); padding:8px 18px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
     .btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
 
-    /* ANALYTICS */
     #analyticsSection { display:none; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,8,8,0.96); backdrop-filter:blur(16px); z-index:100; }
     .topbar-left { display:flex; align-items:center; gap:14px; }
@@ -54,7 +61,6 @@
     .main { max-width:1100px; margin:0 auto; padding:28px 32px; }
     @media(max-width:700px) { .main { padding:20px; } .topbar { padding:16px 20px; } }
 
-    /* STATS */
     .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px; }
     @media(max-width:700px) { .stats-grid { grid-template-columns:1fr 1fr; } }
     @media(max-width:400px) { .stats-grid { grid-template-columns:1fr; } }
@@ -65,7 +71,6 @@
     .stat-up { color:#4caf50; }
     .stat-down { color:#e05555; }
 
-    /* PANELS */
     .panel { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:24px; margin-bottom:20px; }
     .panel-title { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:var(--accent); margin-bottom:20px; display:flex; align-items:center; gap:12px; }
     .panel-title::after { content:''; flex:1; height:1px; background:var(--border); }
@@ -75,7 +80,6 @@
     .chart-panel .panel-title { margin-bottom:16px; }
     .chart-wrap { position:relative; height:220px; }
 
-    /* LEADERBOARD */
     .dish-row { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); gap:12px; }
     .dish-row:last-child { border-bottom:none; }
     .dish-rank { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:var(--accent); width:32px; flex-shrink:0; line-height:1; }
@@ -90,6 +94,9 @@
   </style>
 </head>
 <body>
+
+<!-- ON-SCREEN DEBUG — visible without devtools, auto-removed after fix -->
+<div id="debugBox"></div>
 
 <!-- LOGIN -->
 <div id="loginSection">
@@ -128,9 +135,9 @@
 
 <script>
 // ─────────────────────────────────────────────
-// SUPABASE CONFIG — hardcoded, no placeholders
+// SUPABASE CONFIG
 // ─────────────────────────────────────────────
-const SUPABASE_URL     = 'https://kynmckifaixaakpdarxn.supabase.co';
+const SUPABASE_URL      = 'https://kynmckifaixaakpdarxn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5bm1ja2lmYWl4YWFrcGRhcnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjkzNDIsImV4cCI6MjA5MzQwNTM0Mn0.wNncRxFWqn7tVcRJzdG1x6AmvB3k5e6DQamRgXPG7ik';
 
 const { createClient } = supabase;
@@ -146,6 +153,15 @@ let currentRestaurant = null;
 let chartInstances    = {};
 
 // ─────────────────────────────────────────────
+// ON-SCREEN DEBUG
+// ─────────────────────────────────────────────
+function dbg(msg) {
+  const box = document.getElementById('debugBox');
+  box.style.display = 'block';
+  box.textContent += '\n' + msg;
+}
+
+// ─────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────
 function getRestaurantSlug() {
@@ -154,8 +170,8 @@ function getRestaurantSlug() {
 
 function showError(msg) {
   const el = document.getElementById('errorMsg');
-  el.textContent    = msg;
-  el.style.display  = 'block';
+  el.textContent   = msg;
+  el.style.display = 'block';
 }
 
 function hideError() {
@@ -185,7 +201,7 @@ async function loadRestaurantName() {
 }
 
 // ─────────────────────────────────────────────
-// VERIFY RESTAURANT OWNERSHIP AFTER AUTH
+// OWNERSHIP VERIFY
 // ─────────────────────────────────────────────
 async function fetchAndVerifyRestaurant(userId) {
   const slug = getRestaurantSlug();
@@ -222,35 +238,71 @@ async function login() {
   btn.disabled    = true;
 
   try {
+    // STEP 1 — authenticate
     const { data: authData, error: authError } =
       await db.auth.signInWithPassword({ email, password });
 
+    dbg('STEP 1 — signInWithPassword');
+    dbg('authError: ' + JSON.stringify(authError));
+    dbg('session exists: ' + !!authData?.session);
+
     if (authError || !authData?.session) {
       showError('Incorrect email or password.');
+      dbg('FAILED at step 1');
       return;
     }
 
-    // Explicitly set the session so the client uses the bearer token
+    // STEP 2 — set session explicitly
     await db.auth.setSession({
       access_token:  authData.session.access_token,
       refresh_token: authData.session.refresh_token
     });
 
-    const userId    = authData.session.user.id;
-    const restaurant = await fetchAndVerifyRestaurant(userId);
+    const userId = authData.session.user.id;
+    const slug   = getRestaurantSlug();
 
-    if (!restaurant) {
-      showError('Access denied. You do not own this restaurant.');
+    dbg('STEP 2 — session set');
+    dbg('userId from session: [' + userId + ']');
+    dbg('slug from URL: [' + slug + ']');
+
+    // STEP 3 — fetch restaurant
+    const { data: restData, error: restError } = await db
+      .from('restaurants')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    dbg('STEP 3 — restaurant query');
+    dbg('restError: ' + JSON.stringify(restError));
+    dbg('auth_user_id in DB: [' + (restData ? restData.auth_user_id : 'null') + ']');
+
+    if (restError || !restData) {
+      showError('Restaurant not found.');
+      dbg('FAILED at step 3 — restaurant not found');
       await db.auth.signOut();
       return;
     }
 
-    currentRestaurant = restaurant;
+    // STEP 4 — ownership check
+    dbg('STEP 4 — ownership check');
+    dbg('DB auth_user_id : [' + restData.auth_user_id + ']');
+    dbg('session userId  : [' + userId + ']');
+    dbg('MATCH: ' + (restData.auth_user_id === userId));
+
+    if (restData.auth_user_id !== userId) {
+      showError('Access denied. You do not own this restaurant.');
+      dbg('FAILED at step 4 — IDs do not match');
+      await db.auth.signOut();
+      return;
+    }
+
+    dbg('SUCCESS — loading analytics');
+    currentRestaurant = restData;
     showAnalytics();
 
   } catch (e) {
     showError('Something went wrong. Please try again.');
-    console.error('Login error:', e);
+    dbg('EXCEPTION: ' + e.message);
   } finally {
     btn.textContent = 'View Analytics';
     btn.disabled    = false;
@@ -269,6 +321,8 @@ async function logout() {
   document.getElementById('loginSection').style.display     = 'flex';
   document.getElementById('loginEmail').value    = '';
   document.getElementById('loginPassword').value = '';
+  document.getElementById('debugBox').textContent   = '';
+  document.getElementById('debugBox').style.display = 'none';
   hideError();
 }
 
@@ -341,7 +395,6 @@ async function loadAnalytics() {
     const topDish      = sortedDishes[0]?.[0] || '—';
     const bottomDish   = sortedDishes[sortedDishes.length - 1]?.[0] || '—';
 
-    // 28-day daily map
     const dailyMap = {};
     for (let i = 27; i >= 0; i--) {
       const d = new Date(now);
@@ -353,7 +406,6 @@ async function loadAnalytics() {
       if (dailyMap[key] !== undefined) dailyMap[key]++;
     });
 
-    // Hourly heatmap
     const hourlyMap = Array(24).fill(0);
     thisWeekViews.forEach(v => {
       hourlyMap[new Date(v.viewed_at).getHours()]++;
@@ -367,7 +419,7 @@ async function loadAnalytics() {
     });
 
   } catch (e) {
-    console.error('Analytics load error:', e);
+    dbg('loadAnalytics error: ' + e.message);
     document.getElementById('analyticsContent').innerHTML =
       `<div class="empty-state">Error loading analytics: ${e.message}</div>`;
   }
@@ -544,7 +596,7 @@ document.addEventListener('keypress', function(e) {
 });
 
 // ─────────────────────────────────────────────
-// INIT — restore session if already logged in
+// INIT
 // ─────────────────────────────────────────────
 (async () => {
   await loadRestaurantName();
@@ -553,7 +605,6 @@ document.addEventListener('keypress', function(e) {
     const { data: sessionData } = await db.auth.getSession();
 
     if (sessionData?.session) {
-      // Explicitly set session so storage client inherits bearer token
       await db.auth.setSession({
         access_token:  sessionData.session.access_token,
         refresh_token: sessionData.session.refresh_token
@@ -570,7 +621,7 @@ document.addEventListener('keypress', function(e) {
       }
     }
   } catch (e) {
-    console.error('Session restore error:', e);
+    dbg('Session restore error: ' + e.message);
   }
 })();
 </script>
