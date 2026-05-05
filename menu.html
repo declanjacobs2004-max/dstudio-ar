@@ -22,7 +22,7 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
 
-  /* ── LOADING ──────────────────────────────────── */
+  /* ── LOADING ── */
   #loading-screen {
     position: fixed; inset: 0; background: var(--bg);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
@@ -36,25 +36,26 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { color: var(--muted); font-size: 13px; letter-spacing: 0.05em; }
 
-  /* ── ERROR ────────────────────────────────────── */
+  /* ── ERROR ── */
   #error-screen {
     display: none; min-height: 100vh;
     align-items: center; justify-content: center; flex-direction: column; gap: 12px;
     text-align: center; padding: 40px 24px;
   }
   #error-screen h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); }
-  #error-screen p { color: var(--muted); font-size: 14px; max-width: 300px; }
+  #error-screen p { color: var(--muted); font-size: 14px; max-width: 300px; line-height: 1.6; }
 
-  /* ── MAIN ─────────────────────────────────────── */
+  /* ── MAIN ── */
   #main { display: none; max-width: 520px; margin: 0 auto; min-height: 100vh; }
 
-  /* ── HEADER ───────────────────────────────────── */
+  /* ── HEADER ── */
   .header {
     padding: 36px 24px 28px;
     background: linear-gradient(180deg, rgba(200,169,110,0.06) 0%, transparent 100%);
     border-bottom: 1px solid var(--border);
     text-align: center;
   }
+  .header img { height: 36px; opacity: 0.75; filter: invert(1); margin-bottom: 16px; }
   .header-restaurant {
     font-family: 'Cormorant Garamond', serif;
     font-size: 32px; font-weight: 300; letter-spacing: 0.02em;
@@ -65,7 +66,7 @@
   }
   .header-sub span { color: var(--gold); }
 
-  /* ── DISHES LIST ──────────────────────────────── */
+  /* ── DISHES LIST ── */
   .dishes-list { padding: 20px 16px 100px; }
 
   .dish-card {
@@ -103,17 +104,17 @@
     text-transform: uppercase;
   }
 
-  /* ── FOOTER BRAND ─────────────────────────────── */
+  /* ── FOOTER ── */
   .footer-brand {
     position: fixed; bottom: 0; left: 0; right: 0;
     background: var(--bg); border-top: 1px solid var(--border);
     padding: 14px 24px; text-align: center;
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
-  .footer-brand img { height: 18px; opacity: 0.6; }
+  .footer-brand img { height: 18px; opacity: 0.6; filter: invert(1); }
   .footer-brand span { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
 
-  /* ── EMPTY ────────────────────────────────────── */
+  /* ── EMPTY ── */
   .empty-dishes { text-align: center; padding: 60px 24px; color: var(--muted); }
   .empty-dishes p { font-size: 14px; }
 
@@ -136,6 +137,7 @@
 
 <div id="main">
   <div class="header">
+    <img src="D_Studio_logo.png" alt="D'Studio" onerror="this.style.display='none'" />
     <div class="header-restaurant" id="restaurant-name"></div>
     <div class="header-sub">AR Menu &nbsp;·&nbsp; <span>Point. Tap. See it in 3D.</span></div>
   </div>
@@ -149,21 +151,46 @@
 </div>
 
 <script>
+// ─────────────────────────────────────────────
+// CONFIGURATION
+// ─────────────────────────────────────────────
 const SUPABASE_URL = 'https://kynmckifaixaakpdarxn.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_QW3AQ4MxIFU3u0hXhdwUVA_IMPALYbq';
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5bm1ja2lmYWl4YWFrcGRhcnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjkzNDIsImV4cCI6MjA5MzQwNTM0Mn0.wNncRxFWqn7tVcRJzdG1x6AmvB3k5e6DQamRgXPG7ik';
 
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: false } // public page — no session needed
+});
+
+// ─────────────────────────────────────────────
+// SAFE HTML ESCAPING
+// ─────────────────────────────────────────────
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#39;');
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
 async function init() {
-  const params = new URLSearchParams(window.location.search);
+  const params         = new URLSearchParams(window.location.search);
   const restaurantSlug = params.get('restaurant');
 
-  if (!restaurantSlug) return showError();
+  // No slug — nothing to show
+  if (!restaurantSlug || restaurantSlug.trim() === '') return showError();
+
+  // Basic slug validation — prevent injection via URL
+  if (!/^[a-z0-9-]+$/i.test(restaurantSlug) || restaurantSlug.length > 60) return showError();
 
   try {
     const { data: restaurant, error: rErr } = await db
       .from('restaurants')
-      .select('*')
+      .select('id, name, slug')
       .eq('slug', restaurantSlug)
       .single();
 
@@ -171,18 +198,22 @@ async function init() {
 
     const { data: dishes, error: dErr } = await db
       .from('dishes')
-      .select('*')
+      .select('id, dish_name, dish_price, dish_description, slug, model_url, usdz_url')
       .eq('restaurant_id', restaurant.id)
       .order('created_at', { ascending: true });
 
     if (dErr) return showError();
 
     renderMenu(restaurant, dishes || []);
+
   } catch (e) {
     showError();
   }
 }
 
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
 function renderMenu(restaurant, dishes) {
   document.title = `${restaurant.name} — AR Menu`;
   document.getElementById('restaurant-name').textContent = restaurant.name;
@@ -193,38 +224,49 @@ function renderMenu(restaurant, dishes) {
     list.innerHTML = '<div class="empty-dishes"><p>Menu coming soon.</p></div>';
   } else {
     list.innerHTML = dishes.map(d => {
-      const url = `dish.html?restaurant=${encodeURIComponent(restaurant.slug)}&dish=${encodeURIComponent(d.slug)}`;
-      const desc = d.dish_description ? d.dish_description.substring(0, 60) + (d.dish_description.length > 60 ? '…' : '') : '';
+      // dish.html reads ?slug= only — single clean param, matches QR code format
+      const url  = `dish.html?slug=${encodeURIComponent(d.slug)}`;
+      const desc = d.dish_description
+        ? escHtml(d.dish_description.substring(0, 60) + (d.dish_description.length > 60 ? '…' : ''))
+        : '';
+      const hasAR = !!(d.model_url);
+
       return `
         <a class="dish-card" href="${url}">
           <div class="dish-card-body">
             <div class="dish-card-name">${escHtml(d.dish_name)}</div>
-            ${desc ? `<div class="dish-card-desc">${escHtml(desc)}</div>` : ''}
+            ${desc ? `<div class="dish-card-desc">${desc}</div>` : ''}
           </div>
           <div class="dish-card-right">
             <div class="dish-card-price">${escHtml(d.dish_price)}</div>
+            ${hasAR ? `
             <div class="ar-badge">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><circle cx="4" cy="4" r="3.5" stroke="currentColor"/><circle cx="4" cy="4" r="1.5" fill="currentColor"/></svg>
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                <circle cx="4" cy="4" r="3.5" stroke="currentColor"/>
+                <circle cx="4" cy="4" r="1.5" fill="currentColor"/>
+              </svg>
               View in AR
-            </div>
+            </div>` : ''}
           </div>
         </a>`;
     }).join('');
   }
 
   document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('main').style.display = 'block';
+  document.getElementById('main').style.display           = 'block';
 }
 
+// ─────────────────────────────────────────────
+// ERROR STATE
+// ─────────────────────────────────────────────
 function showError() {
   document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('error-screen').style.display = 'flex';
+  document.getElementById('error-screen').style.display   = 'flex';
 }
 
-function escHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
 init();
 </script>
 </body>
