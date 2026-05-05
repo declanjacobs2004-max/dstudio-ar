@@ -284,19 +284,16 @@
 // ─────────────────────────────────────────────
 // CONFIGURATION
 // ─────────────────────────────────────────────
-const SUPABASE_URL  = 'https://kynmckifaixaakpdarxn.supabase.co';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5bm1ja2lmYWl4YWFrcGRhcnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjkzNDIsImV4cCI6MjA5MzQwNTM0Mn0.wNncRxFWqn7tVcRJzdG1x6AmvB3k5e6DQamRgXPG7ik';
-const EDGE_FN_URL   = 'https://kynmckifaixaakpdarxn.supabase.co/functions/v1/create-client-user';
-const AR_BASE_URL   = 'https://dstudio-ar.vercel.app';
+const SUPABASE_URL   = 'https://kynmckifaixaakpdarxn.supabase.co';
+const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5bm1ja2lmYWl4YWFrcGRhcnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MjkzNDIsImV4cCI6MjA5MzQwNTM0Mn0.wNncRxFWqn7tVcRJzdG1x6AmvB3k5e6DQamRgXPG7ik';
+const EDGE_FN_URL    = 'https://kynmckifaixaakpdarxn.supabase.co/functions/v1/create-client-user';
+const AR_BASE_URL    = 'https://dstudio-ar.vercel.app';
 const STORAGE_BUCKET = 'models';
 
-// Admin gate — only this Supabase user ID can access the dashboard
-const ADMIN_USER_ID = 'd22ccb5f-c9d5-47c2-a128-f258468f0cdd';
-
-// File validation
-const ALLOWED_GLB_TYPES   = ['.glb'];
-const ALLOWED_USDZ_TYPES  = ['.usdz'];
-const MAX_FILE_SIZE_BYTES  = 50 * 1024 * 1024; // 50 MB hard cap per file
+const ADMIN_USER_ID      = 'd22ccb5f-c9d5-47c2-a128-f258468f0cdd';
+const ALLOWED_GLB_TYPES  = ['.glb'];
+const ALLOWED_USDZ_TYPES = ['.usdz'];
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -316,16 +313,14 @@ function showToast(msg, isError = false) {
   setTimeout(() => { t.className = 'toast' + (isError ? ' error' : ''); }, 3500);
 }
 
-// Strict sanitiser — strips all HTML, trims, enforces max length
 function sanitise(str, maxLen = 500) {
   if (typeof str !== 'string') return '';
   return str
-    .replace(/[<>"'`]/g, '')   // strip injection chars
+    .replace(/[<>"'`]/g, '')
     .trim()
     .slice(0, maxLen);
 }
 
-// Slug: only lowercase alphanumeric and hyphens, no leading/trailing hyphens
 function sanitiseSlug(str) {
   return str
     .toLowerCase()
@@ -336,7 +331,6 @@ function sanitiseSlug(str) {
     .slice(0, 60);
 }
 
-// Safe dish name for inline onclick attribute
 function escapeDishName(name) {
   return name
     .replace(/\\/g, '\\\\')
@@ -344,7 +338,6 @@ function escapeDishName(name) {
     .replace(/"/g, '&quot;');
 }
 
-// Validate file: extension, size
 function validateFile(file, allowedExtensions) {
   if (!file) return 'No file selected.';
   const ext = '.' + file.name.split('.').pop().toLowerCase();
@@ -354,7 +347,7 @@ function validateFile(file, allowedExtensions) {
   if (file.size > MAX_FILE_SIZE_BYTES) {
     return `File too large. Maximum size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB.`;
   }
-  return null; // valid
+  return null;
 }
 
 function showLoginScreen() {
@@ -395,13 +388,18 @@ async function login() {
       return;
     }
 
-    // Hard admin gate — non-admin accounts are rejected immediately
     if (data.session.user.id !== ADMIN_USER_ID) {
       await db.auth.signOut();
       errEl.textContent = 'Access denied.';
       errEl.style.display = 'block';
       return;
     }
+
+    // Explicitly set session so storage client inherits authenticated state
+    await db.auth.setSession({
+      access_token:  data.session.access_token,
+      refresh_token: data.session.refresh_token
+    });
 
     currentSession = data.session;
     document.getElementById('loginSection').style.display = 'none';
@@ -424,14 +422,11 @@ async function logout() {
 
 // ─────────────────────────────────────────────
 // FILE UPLOAD TO SUPABASE STORAGE
-// Returns the public URL or throws on failure.
 // ─────────────────────────────────────────────
 async function uploadModelFile(file, restaurantSlug, fileType, progressBarEl) {
-  // fileType: 'glb' | 'usdz'
-  const ext       = file.name.split('.').pop().toLowerCase();
-  const safeName  = `${restaurantSlug}/${fileType}-${Date.now()}.${ext}`;
+  const ext      = file.name.split('.').pop().toLowerCase();
+  const safeName = `${restaurantSlug}/${fileType}-${Date.now()}.${ext}`;
 
-  // Show progress bar
   if (progressBarEl) {
     progressBarEl.style.display = 'block';
     progressBarEl.querySelector('.upload-progress-bar').style.width = '30%';
@@ -440,8 +435,8 @@ async function uploadModelFile(file, restaurantSlug, fileType, progressBarEl) {
   const { data, error } = await db.storage
     .from(STORAGE_BUCKET)
     .upload(safeName, file, {
-      cacheControl: '31536000',   // 1 year cache — models don't change
-      upsert: false               // never silently overwrite
+      cacheControl: '31536000',
+      upsert: false
     });
 
   if (error) throw new Error('Upload failed: ' + error.message);
@@ -451,7 +446,6 @@ async function uploadModelFile(file, restaurantSlug, fileType, progressBarEl) {
     setTimeout(() => { progressBarEl.style.display = 'none'; }, 800);
   }
 
-  // Get public URL
   const { data: urlData } = db.storage
     .from(STORAGE_BUCKET)
     .getPublicUrl(data.path);
@@ -563,26 +557,24 @@ async function loadDashboard() {
 
 // ─────────────────────────────────────────────
 // FILE SELECT HANDLER
-// Validates immediately on pick — before any upload attempt
 // ─────────────────────────────────────────────
 function handleFileSelect(restaurantId, fileType, input) {
-  const file      = input.files[0];
-  const labelEl   = document.getElementById(`${fileType}-label-${restaurantId}`);
-  const areaEl    = document.getElementById(`${fileType}-area-${restaurantId}`);
-  const allowed   = fileType === 'glb' ? ALLOWED_GLB_TYPES : ALLOWED_USDZ_TYPES;
+  const file    = input.files[0];
+  const labelEl = document.getElementById(`${fileType}-label-${restaurantId}`);
+  const areaEl  = document.getElementById(`${fileType}-area-${restaurantId}`);
+  const allowed = fileType === 'glb' ? ALLOWED_GLB_TYPES : ALLOWED_USDZ_TYPES;
 
   if (!file) return;
 
   const validationError = validateFile(file, allowed);
   if (validationError) {
     showToast(validationError, true);
-    input.value = ''; // clear the picker
+    input.value = '';
     labelEl.textContent = `Click to upload .${fileType} file`;
     areaEl.classList.remove('has-file');
     return;
   }
 
-  // Valid — update UI
   labelEl.textContent = file.name;
   areaEl.classList.add('has-file');
 }
@@ -643,7 +635,6 @@ async function addRestaurant() {
     }]);
 
     if (restError) {
-      // Duplicate slug gives a unique violation — surface it clearly
       if (restError.code === '23505') {
         showToast('That slug is already taken. Choose a different one.', true);
       } else {
@@ -653,7 +644,7 @@ async function addRestaurant() {
     }
 
     lastRestLink = `${AR_BASE_URL}/menu.html?restaurant=${slug}`;
-    document.getElementById('restSuccessMsg').textContent  = lastRestLink;
+    document.getElementById('restSuccessMsg').textContent   = lastRestLink;
     document.getElementById('restSuccessBox').style.display = 'block';
 
     document.getElementById('newRestName').value       = '';
@@ -730,7 +721,7 @@ function toggleDishForm(restaurantId) {
 }
 
 // ─────────────────────────────────────────────
-// ADD DISH — uploads files then saves to DB
+// ADD DISH
 // ─────────────────────────────────────────────
 async function addDish(restaurantId, restaurantSlug) {
   const dishName  = sanitise(document.getElementById(`dname-${restaurantId}`).value, 100);
@@ -746,18 +737,16 @@ async function addDish(restaurantId, restaurantSlug) {
     return;
   }
 
-  // Re-validate files at save time (user could have bypassed the onchange)
   const glbError  = validateFile(glbFile,  ALLOWED_GLB_TYPES);
   const usdzError = validateFile(usdzFile, ALLOWED_USDZ_TYPES);
   if (glbError)  { showToast('GLB: '  + glbError,  true); return; }
   if (usdzError) { showToast('USDZ: ' + usdzError, true); return; }
 
   const saveBtn = document.getElementById(`save-dish-btn-${restaurantId}`);
-  saveBtn.textContent = 'Uploading...';
+  saveBtn.textContent = 'Uploading GLB...';
   saveBtn.disabled    = true;
 
   try {
-    // Upload GLB
     const glbUrl = await uploadModelFile(
       glbFile, restaurantSlug, 'glb',
       document.getElementById(`glb-progress-${restaurantId}`)
@@ -765,7 +754,6 @@ async function addDish(restaurantId, restaurantSlug) {
 
     saveBtn.textContent = 'Uploading USDZ...';
 
-    // Upload USDZ
     const usdzUrl = await uploadModelFile(
       usdzFile, restaurantSlug, 'usdz',
       document.getElementById(`usdz-progress-${restaurantId}`)
@@ -773,7 +761,6 @@ async function addDish(restaurantId, restaurantSlug) {
 
     saveBtn.textContent = 'Saving...';
 
-    // Build slug: sanitised name + timestamp for uniqueness
     const slug = dishName
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-')
@@ -796,7 +783,6 @@ async function addDish(restaurantId, restaurantSlug) {
       return;
     }
 
-    // Reset form
     document.getElementById(`dname-${restaurantId}`).value  = '';
     document.getElementById(`dprice-${restaurantId}`).value = '';
     document.getElementById(`ddesc-${restaurantId}`).value  = '';
@@ -852,10 +838,10 @@ async function downloadQR(dishSlug, dishName, dishId) {
       errorCorrectionLevel: 'H'
     });
 
-    const dataUrl  = canvas.toDataURL('image/png');
-    const link     = document.createElement('a');
-    link.href      = dataUrl;
-    link.download  = `qr-${dishName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`;
+    const dataUrl = canvas.toDataURL('image/png');
+    const link    = document.createElement('a');
+    link.href     = dataUrl;
+    link.download = `qr-${dishName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`;
     link.click();
 
     showToast(`QR downloaded for ${dishName}`);
@@ -899,6 +885,11 @@ document.addEventListener('keypress', function(e) {
   try {
     const { data } = await db.auth.getSession();
     if (data.session && data.session.user.id === ADMIN_USER_ID) {
+      // Explicitly set session so storage client inherits authenticated state
+      await db.auth.setSession({
+        access_token:  data.session.access_token,
+        refresh_token: data.session.refresh_token
+      });
       currentSession = data.session;
       document.getElementById('loginSection').style.display = 'none';
       document.getElementById('dashboard').style.display    = 'block';
